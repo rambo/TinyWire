@@ -501,7 +501,10 @@ ISR( USI_OVERFLOW_VECTOR )
     // Address mode: check address and send ACK (and next USI_SLAVE_SEND_DATA) if OK,
     // else reset USI
     case USI_SLAVE_CHECK_ADDRESS:
-      if ( ( USIDR == 0 ) || ( ( USIDR >> 1 ) == slaveAddress) )
+      if (
+             ( USIDR == 0 ) // I'm fairly sure this is a bug (though how exactly it would cause the ACK only on addresses only *after* the selected device address is a good question, also: is 0x0 the global all-call ?)
+          || ( ( USIDR >> 1 ) == slaveAddress)
+          )
       {
           if ( USIDR & 0x01 )
         {
