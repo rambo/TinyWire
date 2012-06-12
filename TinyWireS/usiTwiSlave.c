@@ -402,6 +402,11 @@ usiTwiDataInReceiveBuffer(
 
 } // end usiTwiDataInReceiveBuffer
 
+uint8_t usiTwiAmountDataInReceiveBuffer(void)
+{
+    return abs(rxTail - rxHead);
+}
+
 
 
 /********************************************************************************
@@ -502,7 +507,10 @@ ISR( USI_OVERFLOW_VECTOR )
     // else reset USI
     case USI_SLAVE_CHECK_ADDRESS:
       if (
+            /*
              ( USIDR == 0 ) // I'm fairly sure this is a bug (though how exactly it would cause the ACK only on addresses only *after* the selected device address is a good question, also: is 0x0 the global all-call ?)
+             */
+             0x0
           || ( ( USIDR >> 1 ) == slaveAddress)
           )
       {
