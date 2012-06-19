@@ -10,6 +10,9 @@ donblake at worldnet.att.net
 Created from Atmel source files for Application Note AVR312: Using the USI Module
 as an I2C slave.
 
+Source of the Atmel code (for reference) seems to be here http://www.mikrocontroller.net/attachment/85443/USI_TWI_Slave.c
+
+
 This program is free software; you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
 Foundation; either version 2 of the License, or (at your option) any later
