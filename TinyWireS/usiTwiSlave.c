@@ -407,7 +407,7 @@ usiTwiDataInReceiveBuffer(
 
 uint8_t usiTwiAmountDataInReceiveBuffer(void)
 {
-    return abs((int)rxTail - (int)rxHead);
+    return abs((int8_t)rxTail - (int8_t)rxHead);
 }
 
 
