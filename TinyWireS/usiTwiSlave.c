@@ -33,7 +33,6 @@ Change Activity:
 
 ********************************************************************************/
 
-#ifndef TEST
 
 /********************************************************************************
                                     includes
@@ -43,7 +42,7 @@ Change Activity:
 #include <avr/interrupt.h>
 
 #include "usiTwiSlave.h"
-#include "../common/util.h"
+//#include "../common/util.h"
 
 
 /********************************************************************************
@@ -599,5 +598,3 @@ ISR( USI_OVERFLOW_VECTOR )
   } // end switch
 
 } // end ISR( USI_OVERFLOW_VECTOR )
-
-#endif /* TEST */

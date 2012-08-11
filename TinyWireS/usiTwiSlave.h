@@ -58,7 +58,7 @@ uint8_t usiTwiReceiveByte( void );
 bool    usiTwiDataInReceiveBuffer( void );
 void    (*_onTwiDataRequest)(void);
 bool    usiTwiDataInTransmitBuffer(void);
-uint8_t usiTwiAmountDataInReceiveBuffer(void)
+uint8_t usiTwiAmountDataInReceiveBuffer(void);
 
 
 /********************************************************************************
