@@ -49,7 +49,7 @@ class USI_TWI_S
     void begin(uint8_t I2C_SLAVE_ADDR);
     void send(uint8_t data);
     uint8_t available();
-    uint8_t receive();	
+    uint8_t receive();
 };
 
 extern USI_TWI_S TinyWireS;

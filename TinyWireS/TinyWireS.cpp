@@ -45,6 +45,7 @@ uint8_t USI_TWI_S::receive(){ // returns the bytes received one at a time
   return usiTwiReceiveByte(); 
 }
 
+
 // Preinstantiate Objects //////////////////////////////////////////////////////
 
 USI_TWI_S TinyWireS = USI_TWI_S();
