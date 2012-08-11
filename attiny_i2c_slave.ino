@@ -95,6 +95,7 @@ void loop()
     analogWrite(1, i2c_regs[0]);
     i2c_regs[0] = i2c_regs[0]+10; // See if the loop is still runnign when I2C hangs
 
+    // NOTE: this will also delay the receiving of the I2C instructions (since we do not have the onReceive/onRequest callback handling yet)
     digitalWrite(3, LOW); // Note that this makes the led turn on, it's wire this way to allow for the voltage sensing above.
     delay(i2c_regs[1]*4);
     digitalWrite(3, HIGH);
