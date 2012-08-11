@@ -12,6 +12,10 @@ arduino pin 4 =     OC1B  = PORTB <- _BV(4) = SOIC pin 3 (Analog 2)
 #define I2C_SLAVE_ADDRESS 0x4 // the 7-bit address (remember to change this)
 // Get this from https://github.com/rambo/TinyWire
 #include <TinyWireS.h>
+// The default buffer size, Can't recall the scope of defines right now
+#ifndef TWI_RX_BUFFER_SIZE
+#define TWI_RX_BUFFER_SIZE ( 16 )
+#endif
 
 
 volatile uint8_t i2c_regs[] =
@@ -44,6 +48,16 @@ void setup()
 
 void receiveEvent(uint8_t howMany)
 {
+    if (howMany < 1)
+    {
+        // Sanity-check
+        return;
+    }
+    if (howMany > TWI_RX_BUFFER_SIZE)
+    {
+        // Also insane number
+        return;
+    }
     //TinyWireS.send(howMany);
     /*
     if (howMany < 2)
@@ -55,7 +69,7 @@ void receiveEvent(uint8_t howMany)
     byte reg_addr = TinyWireS.receive();
     */
     byte reg_addr = 0;
-    byte max_reg = reg_addr + howMany - 1;
+    byte max_reg = reg_addr + howMany;
     
     for (byte i = reg_addr; i < max_reg; i++)
     {
