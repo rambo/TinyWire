@@ -31,12 +31,11 @@ void setup()
     pinMode(3, OUTPUT); // OC1B-, Arduino pin 3, ADC
     digitalWrite(3, LOW); // Note that this makes the led turn on, it's wire this way to allow for the voltage sensing above.
 
-
     pinMode(1, OUTPUT); // OC1A, also The only HW-PWM -pin supported by the tiny core analogWrite
 
-    // This *should* enable pull-ups but it doesn't seem to work
-    digitalWrite(0, HIGH);
-    digitalWrite(2, HIGH);
+    /**
+     * Reminder: taking care of pull-ups is the masters job
+     */
 
     TinyWireS.begin(I2C_SLAVE_ADDRESS);
 
