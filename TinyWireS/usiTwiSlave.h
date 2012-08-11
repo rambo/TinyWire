@@ -56,8 +56,8 @@ void    usiTwiSlaveInit( uint8_t );
 void    usiTwiTransmitByte( uint8_t );
 uint8_t usiTwiReceiveByte( void );
 bool    usiTwiDataInReceiveBuffer( void );
-uint8_t    usiTwiAmountDataInReceiveBuffer( void );
-
+void    (*_onTwiDataRequest)(void);
+bool    usiTwiDataInTransmitBuffer(void);
 
 
 /********************************************************************************
@@ -68,7 +68,7 @@ uint8_t    usiTwiAmountDataInReceiveBuffer( void );
 
 // permitted RX buffer sizes: 1, 2, 4, 8, 16, 32, 64, 128 or 256
 
-#define TWI_RX_BUFFER_SIZE  ( 32 ) // jjg was 16
+#define TWI_RX_BUFFER_SIZE  ( 16 )
 #define TWI_RX_BUFFER_MASK  ( TWI_RX_BUFFER_SIZE - 1 )
 
 #if ( TWI_RX_BUFFER_SIZE & TWI_RX_BUFFER_MASK )
@@ -77,7 +77,7 @@ uint8_t    usiTwiAmountDataInReceiveBuffer( void );
 
 // permitted TX buffer sizes: 1, 2, 4, 8, 16, 32, 64, 128 or 256
 
-#define TWI_TX_BUFFER_SIZE ( 32 ) // jjg was 16
+#define TWI_TX_BUFFER_SIZE ( 16 )
 #define TWI_TX_BUFFER_MASK ( TWI_TX_BUFFER_SIZE - 1 )
 
 #if ( TWI_TX_BUFFER_SIZE & TWI_TX_BUFFER_MASK )

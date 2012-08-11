@@ -2,16 +2,13 @@
 
 USI TWI Slave driver.
 
-Created by Donald R. Blake
-donblake at worldnet.att.net
+Created by Donald R. Blake. donblake at worldnet.att.net
+Adapted by Jochen Toppe, jochen.toppe at jtoee.com
 
 ---------------------------------------------------------------------------------
 
 Created from Atmel source files for Application Note AVR312: Using the USI Module
 as an I2C slave.
-
-Source of the Atmel code (for reference) seems to be here http://www.mikrocontroller.net/attachment/85443/USI_TWI_Slave.c
-
 
 This program is free software; you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
@@ -31,27 +28,26 @@ Change Activity:
   16 Mar 2007  Created.
   27 Mar 2007  Added support for ATtiny261, 461 and 861.
   26 Apr 2007  Fixed ACK of slave address on a read.
+  04 Jul 2007  Fixed USISIF in ATtiny45 def
+  12 Dev 2009  Added callback functions for data requests
 
 ********************************************************************************/
 
-
+#ifndef TEST
 
 /********************************************************************************
-
                                     includes
-
 ********************************************************************************/
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include "usiTwiSlave.h"
 
+#include "usiTwiSlave.h"
+#include "../common/util.h"
 
 
 /********************************************************************************
-
                             device dependent defines
-
 ********************************************************************************/
 
 #if defined( __AVR_ATtiny2313__ )
@@ -77,7 +73,7 @@ Change Activity:
 #  define PORT_USI_SCL        PB2
 #  define PIN_USI_SDA         PINB0
 #  define PIN_USI_SCL         PINB2
-#  define USI_START_COND_INT  USISIF //was USICIF jjg
+#  define USI_START_COND_INT  USISIF
 #  define USI_START_VECTOR    USI_START_vect
 #  define USI_OVERFLOW_VECTOR USI_OVF_vect
 #endif
@@ -261,6 +257,9 @@ static uint8_t          txBuf[ TWI_TX_BUFFER_SIZE ];
 static volatile uint8_t txHead;
 static volatile uint8_t txTail;
 
+// data requested callback
+void (*_onTwiDataRequest)(void);
+
 
 
 /********************************************************************************
@@ -344,6 +343,14 @@ usiTwiSlaveInit(
 } // end usiTwiSlaveInit
 
 
+bool usiTwiDataInTransmitBuffer(void)
+{
+
+  // return 0 (false) if the receive buffer is empty
+  return txHead != txTail;
+
+} // end usiTwiDataInTransmitBuffer
+
 
 // put data in the transmission buffer, wait if buffer is full
 
@@ -368,6 +375,8 @@ usiTwiTransmitByte(
   txHead = tmphead;
 
 } // end usiTwiTransmitByte
+
+
 
 
 
@@ -404,11 +413,6 @@ usiTwiDataInReceiveBuffer(
   return rxHead != rxTail;
 
 } // end usiTwiDataInReceiveBuffer
-
-uint8_t usiTwiAmountDataInReceiveBuffer(void)
-{
-    return abs((int8_t)rxTail - (int8_t)rxHead);
-}
 
 
 
@@ -509,15 +513,11 @@ ISR( USI_OVERFLOW_VECTOR )
     // Address mode: check address and send ACK (and next USI_SLAVE_SEND_DATA) if OK,
     // else reset USI
     case USI_SLAVE_CHECK_ADDRESS:
-      if (
-            /*
-             ( USIDR == 0 ) // I'm fairly sure this is a bug (though how exactly it would cause the ACK only on addresses only *after* the selected device address is a good question, also: is 0x0 the global all-call ?)
-             */
-             0x0
-          || ( ( USIDR >> 1 ) == slaveAddress)
-          )
+      if ( ( USIDR == 0 ) || ( ( USIDR >> 1 ) == slaveAddress) )
       {
-          if ( USIDR & 0x01 )
+         // callback
+         if(_onTwiDataRequest) _onTwiDataRequest();
+         if ( USIDR & 0x01 )
         {
           overflowState = USI_SLAVE_SEND_DATA;
         }
@@ -593,3 +593,5 @@ ISR( USI_OVERFLOW_VECTOR )
   } // end switch
 
 } // end ISR( USI_OVERFLOW_VECTOR )
+
+#endif /* TEST */
