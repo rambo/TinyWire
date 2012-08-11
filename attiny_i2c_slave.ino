@@ -44,6 +44,8 @@ void setup()
 
 void receiveEvent(uint8_t howMany)
 {
+    //TinyWireS.send(howMany);
+    /*
     if (howMany < 2)
     {
         // We're only interested when we know we can suppose the first byte is register address
@@ -51,6 +53,8 @@ void receiveEvent(uint8_t howMany)
     }
 
     byte reg_addr = TinyWireS.receive();
+    */
+    byte reg_addr = 0;
     byte max_reg = reg_addr + howMany - 1;
     
     for (byte i = reg_addr; i < max_reg; i++)
@@ -71,8 +75,12 @@ void loop()
 {
     // Poor-mans event handling (tinywire lib does not yet trigger the event right away), though I still wonder if we can still get two triggers during one I2C transaction (which will mess things up)
     uint8_t i2c_available = TinyWireS.available();
-    receiveEvent(i2c_available);
+    if (i2c_available > 0)
+    {
+        receiveEvent(i2c_available);
+    }
     analogWrite(1, i2c_regs[0]);
+    i2c_regs[0] = i2c_regs[0]+10; // See if the loop is still runnign when I2C hangs
 
     digitalWrite(3, LOW); // Note that this makes the led turn on, it's wire this way to allow for the voltage sensing above.
     delay(i2c_regs[1]*4);
