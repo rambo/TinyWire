@@ -415,7 +415,16 @@ usiTwiDataInReceiveBuffer(
 
 uint8_t usiTwiAmountDataInReceiveBuffer(void)
 {
-    return abs((int8_t)rxTail - (int8_t)rxHead);
+    if (rxHead == rxTail)
+    {
+        return 0;
+    }
+    if (rxHead < rxTail)
+    {
+        // Is there a better way ?
+        return ((int8_t)rxHead - (int8_t)rxTail) + TWI_RX_BUFFER_SIZE;
+    }
+    return rxHead - rxTail;
 }
  
  

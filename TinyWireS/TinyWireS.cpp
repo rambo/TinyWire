@@ -37,11 +37,8 @@ void USI_TWI_S::send(uint8_t data){  // send it back to master
 }
 
 uint8_t USI_TWI_S::available(){ // the bytes available that haven't been read yet
-  return usiTwiDataInReceiveBuffer(); 
-  /**
-   * disable temporarily
   return usiTwiAmountDataInReceiveBuffer(); 
-   */
+  //return usiTwiDataInReceiveBuffer(); // This is wrong as far as the Wire API is concerned since it returns boolean and not amount
 }
  
 uint8_t USI_TWI_S::receive(){ // returns the bytes received one at a time
