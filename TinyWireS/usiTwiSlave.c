@@ -479,8 +479,17 @@ ISR( USI_START_VECTOR )
   }
   else
   {
-
     // a Stop Condition did occur
+    
+    // Handle the callback if it's there
+    if (usi_onReceiverPtr)
+    {
+        if (usiTwiDataInReceiveBuffer())
+        {
+            usi_onReceiverPtr(usiTwiAmountDataInReceiveBuffer());
+        }
+    }
+    
     USICR =
          // enable Start Condition Interrupt
          ( 1 << USISIE ) |
