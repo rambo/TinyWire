@@ -218,7 +218,21 @@ Change Activity:
        ( 0x0 << USICNT0 ); \
 }
 
+#define USI_RECEIVE_CALLBACK() \
+{ \
+    if (usi_onReceiverPtr) \
+    { \
+        if (usiTwiDataInReceiveBuffer()) \
+        { \
+            usi_onReceiverPtr(usiTwiAmountDataInReceiveBuffer()); \
+        } \
+    } \
+}
 
+#define USI_REQUEST_CALLBACK() \
+{ \
+    if(usi_onRequestPtr) usi_onRequestPtr(); \
+}
 
 /********************************************************************************
 
@@ -482,13 +496,13 @@ ISR( USI_START_VECTOR )
     // a Stop Condition did occur
     
     // Handle the callback if it's there
-    if (usi_onReceiverPtr)
-    {
-        if (usiTwiDataInReceiveBuffer())
-        {
-            usi_onReceiverPtr(usiTwiAmountDataInReceiveBuffer());
-        }
-    }
+    /**
+     * This seems to be the wrong place for this callback (at least it does nothing...)
+    USI_RECEIVE_CALLBACK();
+    */
+    // Try a less smart approach
+    uint8_t foo = usiTwiAmountDataInReceiveBuffer();
+    if (usi_onReceiverPtr) usi_onReceiverPtr(foo);
     
     USICR =
          // enable Start Condition Interrupt
@@ -571,7 +585,7 @@ ISR( USI_OVERFLOW_VECTOR )
     // copy data from buffer to USIDR and set USI to shift byte
     // next USI_SLAVE_REQUEST_REPLY_FROM_SEND_DATA
     case USI_SLAVE_SEND_DATA:
-      if(usi_onRequestPtr) usi_onRequestPtr();
+      USI_REQUEST_CALLBACK();
       // Get data from Buffer
       if ( txHead != txTail )
       {

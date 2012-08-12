@@ -29,8 +29,15 @@ volatile uint8_t i2c_regs[] =
 volatile byte reg_position;
 void requestEvent()
 {
+    blinkn(1);
+    /*
+    TinyWireS.send(0x1);
+    reg_position++;
+    */
+    /*
     TinyWireS.send(i2c_regs[reg_position]);
     reg_position = (reg_position+1) % sizeof(i2c_regs);
+    */
 }
 
 
@@ -121,9 +128,10 @@ void loop()
     {
         digitalWrite(3, LOW); // Note that this makes the led turn on, it's wire this way to allow for the voltage sensing above.
         delay(500);
-        digitalWrite(3, HIGH); // Note that this makes the led turn on, it's wire this way to allow for the voltage sensing above.
+        digitalWrite(3, HIGH);
         delay(50);
         blinkn(i2c_available);
+        delay(200);
     }
     analogWrite(1, i2c_regs[0]);
     i2c_regs[0] = i2c_regs[0]+10; // See if the loop is still runnign when I2C hangs
