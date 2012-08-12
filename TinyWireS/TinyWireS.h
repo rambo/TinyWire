@@ -50,6 +50,8 @@ class USI_TWI_S
     void send(uint8_t data);
     uint8_t available();
     uint8_t receive();
+    void onReceive( void (*)(uint8_t) );
+    void onRequest( void (*)(void) );
 };
 
 extern USI_TWI_S TinyWireS;

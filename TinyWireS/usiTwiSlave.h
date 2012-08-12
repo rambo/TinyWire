@@ -59,6 +59,9 @@ bool    usiTwiDataInReceiveBuffer( void );
 void    (*_onTwiDataRequest)(void);
 bool    usiTwiDataInTransmitBuffer(void);
 uint8_t usiTwiAmountDataInReceiveBuffer(void);
+// on_XXX handler pointers
+void    (*usi_onRequestPtr)(void);
+void    (*usi_onReceiverPtr)(uint8_t);
 
 
 /********************************************************************************

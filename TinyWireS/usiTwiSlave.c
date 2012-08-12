@@ -562,6 +562,7 @@ ISR( USI_OVERFLOW_VECTOR )
     // copy data from buffer to USIDR and set USI to shift byte
     // next USI_SLAVE_REQUEST_REPLY_FROM_SEND_DATA
     case USI_SLAVE_SEND_DATA:
+      if(usi_onRequestPtr) usi_onRequestPtr();
       // Get data from Buffer
       if ( txHead != txTail )
       {

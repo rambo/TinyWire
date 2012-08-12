@@ -45,6 +45,18 @@ uint8_t USI_TWI_S::receive(){ // returns the bytes received one at a time
   return usiTwiReceiveByte(); 
 }
 
+// sets function called on slave write
+void USI_TWI_S::onReceive( void (*function)(uint8_t) )
+{
+  usi_onReceiverPtr = function;
+}
+
+// sets function called on slave read
+void USI_TWI_S::onRequest( void (*function)(void) )
+{
+  usi_onRequestPtr = function;
+}
+
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
 
