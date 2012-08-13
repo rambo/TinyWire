@@ -494,16 +494,7 @@ ISR( USI_START_VECTOR )
   else
   {
     // a Stop Condition did occur
-    
-    // Handle the callback if it's there
-    /**
-     * This seems to be the wrong place for this callback (at least it does nothing...)
-    USI_RECEIVE_CALLBACK();
-    */
-    // Try a less smart approach
-    uint8_t foo = usiTwiAmountDataInReceiveBuffer();
-    if (usi_onReceiverPtr) usi_onReceiverPtr(foo);
-    
+
     USICR =
          // enable Start Condition Interrupt
          ( 1 << USISIE ) |
@@ -526,6 +517,14 @@ ISR( USI_START_VECTOR )
        ( 1 << USIPF ) |( 1 << USIDC ) |
        // set USI to sample 8 bits (count 16 external SCL pin toggles)
        ( 0x0 << USICNT0);
+
+
+
+    // Handle the callback if it's there
+    /**
+     * This seems to be the wrong place for this callback (at least it does nothing...)
+     */
+    USI_RECEIVE_CALLBACK();
 
 } // end ISR( USI_START_VECTOR )
 

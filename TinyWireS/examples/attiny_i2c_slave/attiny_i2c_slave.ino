@@ -29,15 +29,9 @@ volatile uint8_t i2c_regs[] =
 volatile byte reg_position;
 void requestEvent()
 {
-    blinkn(1);
-    /*
-    TinyWireS.send(0x1);
-    reg_position++;
-    */
-    /*
     TinyWireS.send(i2c_regs[reg_position]);
+    // Increment the reg position on each read, and loop back to zero
     reg_position = (reg_position+1) % sizeof(i2c_regs);
-    */
 }
 
 
@@ -124,20 +118,22 @@ void loop()
 {
     // Poor-mans event handling (tinywire lib does not yet trigger the event right away), though I still wonder if we can still get two triggers during one I2C transaction (which will mess things up)
     uint8_t i2c_available = TinyWireS.available();
+    /*
     if (i2c_available > 0)
     {
         digitalWrite(3, LOW); // Note that this makes the led turn on, it's wire this way to allow for the voltage sensing above.
-        delay(500);
-        digitalWrite(3, HIGH);
-        delay(50);
-        blinkn(i2c_available);
         delay(200);
+        digitalWrite(3, HIGH);
+        delay(100);
+        blinkn(i2c_available);
+        delay(500);
     }
+    */
     analogWrite(1, i2c_regs[0]);
     i2c_regs[0] = i2c_regs[0]+10; // See if the loop is still runnign when I2C hangs
 
-    // NOTE: this will also delay the receiving of the I2C instructions (since we do not have the onReceive/onRequest callback handling yet)
     /*
+    // NOTE: this will also delay the receiving of the I2C instructions (since we do not have the onReceive/onRequest callback handling yet)
     digitalWrite(3, LOW); // Note that this makes the led turn on, it's wire this way to allow for the voltage sensing above.
     delay(i2c_regs[1]*4);
     digitalWrite(3, HIGH);
