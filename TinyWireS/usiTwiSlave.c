@@ -461,11 +461,15 @@ uint8_t usiTwiAmountDataInReceiveBuffer(void)
 
 ISR( USI_START_VECTOR )
 {
-  if (overflowState == USI_SLAVE_REQUEST_DATA)
-  {
-    // restart ?
-    USI_RECEIVE_CALLBACK()
-  }
+
+  /*
+  // This triggers on second write, but claims to the callback there is only *one* byte in buffer
+  ONSTOP_USI_RECEIVE_CALLBACK();
+  */
+  /*
+  // This triggers on second write, but claims to the callback there is only *one* byte in buffer
+  USI_RECEIVE_CALLBACK();
+  */
 
   // set default starting conditions for new TWI package
   overflowState = USI_SLAVE_CHECK_ADDRESS;
@@ -636,7 +640,5 @@ ISR( USI_OVERFLOW_VECTOR )
 
   } // end switch
   
-  // This doesn't seem to trigger here
-  ONSTOP_USI_RECEIVE_CALLBACK();
 
 } // end ISR( USI_OVERFLOW_VECTOR )
