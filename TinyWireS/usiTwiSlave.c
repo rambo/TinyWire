@@ -229,6 +229,15 @@ Change Activity:
     } \
 }
 
+#define ONSTOP_USI_RECEIVE_CALLBACK() \
+{ \
+    if (USISR & ( 1 << USIPF )) \
+    { \
+        USI_RECEIVE_CALLBACK(); \
+    } \
+}
+
+
 #define USI_REQUEST_CALLBACK() \
 { \
     if(usi_onRequestPtr) usi_onRequestPtr(); \
@@ -452,6 +461,11 @@ uint8_t usiTwiAmountDataInReceiveBuffer(void)
 
 ISR( USI_START_VECTOR )
 {
+  if (overflowState == USI_SLAVE_REQUEST_DATA)
+  {
+    // restart ?
+    USI_RECEIVE_CALLBACK()
+  }
 
   // set default starting conditions for new TWI package
   overflowState = USI_SLAVE_CHECK_ADDRESS;
@@ -518,13 +532,6 @@ ISR( USI_START_VECTOR )
        // set USI to sample 8 bits (count 16 external SCL pin toggles)
        ( 0x0 << USICNT0);
 
-
-
-    // Handle the callback if it's there
-    /**
-     * This seems to be the wrong place for this callback (at least it does nothing...)
-     */
-    USI_RECEIVE_CALLBACK();
 
 } // end ISR( USI_START_VECTOR )
 
@@ -628,5 +635,8 @@ ISR( USI_OVERFLOW_VECTOR )
       break;
 
   } // end switch
+  
+  // This doesn't seem to trigger here
+  ONSTOP_USI_RECEIVE_CALLBACK();
 
 } // end ISR( USI_OVERFLOW_VECTOR )

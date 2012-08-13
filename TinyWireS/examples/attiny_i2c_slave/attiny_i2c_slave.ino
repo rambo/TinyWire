@@ -79,7 +79,7 @@ void receiveEvent(uint8_t howMany)
     
     for (byte i = reg_addr; i < max_reg; i++)
     {
-        i2c_regs[i] = TinyWireS.receive();
+        i2c_regs[i%sizeof(i2c_regs)] = TinyWireS.receive();
         /*
         switch (i)
         {
