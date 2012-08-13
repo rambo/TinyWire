@@ -605,6 +605,7 @@ ISR( USI_OVERFLOW_VECTOR )
       else
       {
         // the buffer is empty
+        SET_USI_TO_READ_ACK( ); // This might be neccessary sometimes see http://www.avrfreaks.net/index.php?name=PNphpBB2&file=viewtopic&p=805227#805227
         SET_USI_TO_TWI_START_CONDITION_MODE( );
         return;
       } // end if
@@ -639,6 +640,5 @@ ISR( USI_OVERFLOW_VECTOR )
       break;
 
   } // end switch
-  
 
 } // end ISR( USI_OVERFLOW_VECTOR )

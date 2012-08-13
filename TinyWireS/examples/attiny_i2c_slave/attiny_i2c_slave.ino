@@ -49,7 +49,7 @@ void blinkn(uint8_t blinks)
 
 void receiveEvent(uint8_t howMany)
 {
-    blinkn(howMany);
+    blinkn(howMany+1);
 
     if (howMany < 1)
     {
