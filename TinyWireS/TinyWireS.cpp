@@ -16,6 +16,7 @@
 extern "C" {
   #include <inttypes.h>
   #include "usiTwiSlave.h"
+  #include <avr/interrupt.h>
   }
 
 #include "TinyWireS.h"
@@ -57,6 +58,27 @@ void USI_TWI_S::onRequest( void (*function)(void) )
   usi_onRequestPtr = function;
 }
 
+uint8_t TinyWireS_stop_check()
+{
+    if (!(USISR & ( 1 << USIPF )))
+    {
+        // Stop not detected
+        return false;
+    }
+    if (!usi_onReceiverPtr)
+    {
+        // Stop detected but no onReceive callback
+        return true;
+    }
+    uint8_t amount = usiTwiAmountDataInReceiveBuffer();
+    if (amount == 0)
+    {
+        // Stop detected but no data in buffer
+        return true;
+    }
+    usi_onReceiverPtr(amount);
+    return true;
+}
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
 

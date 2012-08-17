@@ -47,10 +47,13 @@ void blinkn(uint8_t blinks)
     }
 }
 
+/**
+ * The I2C data received -handler
+ *
+ * This needs to complete before the next incoming transaction (start, data, restart/stop) does 
+ */
 void receiveEvent(uint8_t howMany)
 {
-    blinkn(howMany+1);
-
     if (howMany < 1)
     {
         // Sanity-check
@@ -62,32 +65,17 @@ void receiveEvent(uint8_t howMany)
         return;
     }
 
-
-
-    //TinyWireS.send(howMany);
-    /*
-    if (howMany < 2)
+    reg_position = TinyWireS.receive();
+    if (howMany == 1)
     {
-        // We're only interested when we know we can suppose the first byte is register address
+        // This write was only to set the buffer for next read
         return;
     }
-
-    byte reg_addr = TinyWireS.receive();
-    */
-    byte reg_addr = 0;
-    byte max_reg = reg_addr + howMany;
-    
-    for (byte i = reg_addr; i < max_reg; i++)
+    byte max_reg = reg_position + howMany;
+    while(reg_position < max_reg)
     {
-        i2c_regs[i%sizeof(i2c_regs)] = TinyWireS.receive();
-        /*
-        switch (i)
-        {
-            case 0x0:
-            {
-            }
-        }
-        */
+        i2c_regs[reg_position%sizeof(i2c_regs)] = TinyWireS.receive();
+        reg_position++;
     }
 }
 
@@ -116,27 +104,10 @@ void setup()
 
 void loop()
 {
-    // Poor-mans event handling (tinywire lib does not yet trigger the event right away), though I still wonder if we can still get two triggers during one I2C transaction (which will mess things up)
-    uint8_t i2c_available = TinyWireS.available();
-    /*
-    if (i2c_available > 0)
-    {
-        digitalWrite(3, LOW); // Note that this makes the led turn on, it's wire this way to allow for the voltage sensing above.
-        delay(200);
-        digitalWrite(3, HIGH);
-        delay(100);
-        blinkn(i2c_available);
-        delay(500);
-    }
-    */
-    analogWrite(1, i2c_regs[0]);
-    i2c_regs[0] = i2c_regs[0]+10; // See if the loop is still runnign when I2C hangs
-
-    /*
-    // NOTE: this will also delay the receiving of the I2C instructions (since we do not have the onReceive/onRequest callback handling yet)
-    digitalWrite(3, LOW); // Note that this makes the led turn on, it's wire this way to allow for the voltage sensing above.
-    delay(i2c_regs[1]*4);
-    digitalWrite(3, HIGH);
-    delay(i2c_regs[2]*4);
-    */
+    /**
+     * This is the only way we can detect stop condition (http://www.avrfreaks.net/index.php?name=PNphpBB2&file=viewtopic&p=984716&sid=82e9dc7299a8243b86cf7969dd41b5b5#984716)
+     * it needs to be called in a very tight loop in order not to miss any.
+     * It will call the function registered via TinyWireS.onReceive(); if there is data in the buffer on stop.
+     */
+    TinyWireS_stop_check();
 }
