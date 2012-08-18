@@ -60,19 +60,14 @@ void USI_TWI_S::onRequest( void (*function)(void) )
 
 void TinyWireS_stop_check()
 {
-    if (!(USISR & ( 1 << USIPF )))
-    {
-        // Stop not detected
-        return;
-    }
-    TinyWireS_recvbuffer_check();
-}
-
-void TinyWireS_recvbuffer_check()
-{
     if (!usi_onReceiverPtr)
     {
         // no onReceive callback, nothing to do...
+        return;
+    }
+    if (!(USISR & ( 1 << USIPF )))
+    {
+        // Stop not detected
         return;
     }
     uint8_t amount = usiTwiAmountDataInReceiveBuffer();

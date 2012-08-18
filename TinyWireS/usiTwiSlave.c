@@ -240,6 +240,7 @@ Change Activity:
 
 #define USI_REQUEST_CALLBACK() \
 { \
+    USI_RECEIVE_CALLBACK(); \
     if(usi_onRequestPtr) usi_onRequestPtr(); \
 }
 

@@ -55,7 +55,6 @@ class USI_TWI_S
 };
 
 void TinyWireS_stop_check();
-void TinyWireS_recvbuffer_check();
 
 extern USI_TWI_S TinyWireS;
 

@@ -30,11 +30,6 @@ volatile uint8_t i2c_regs[] =
 volatile byte reg_position;
 void requestEvent()
 {  
-    /**
-     * Due to the limitiations in USI we do cannot trigger receiveEvent on "repeated start" condition
-     * So check if there is a receive-buffer we should process before sending data out.
-     */
-    TinyWireS_recvbuffer_check();
     TinyWireS.send(i2c_regs[reg_position]);
     // Increment the reg position on each read, and loop back to zero
     reg_position = (reg_position+1) % sizeof(i2c_regs);
