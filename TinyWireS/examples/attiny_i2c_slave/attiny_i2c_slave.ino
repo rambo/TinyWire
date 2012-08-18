@@ -20,9 +20,10 @@ arduino pin 4 =     OC1B  = PORTB <- _BV(4) = SOIC pin 3 (Analog 2)
 
 volatile uint8_t i2c_regs[] =
 {
-    10, // pwm
-    20, // blink on delay/4
-    200, // blink off delay/4
+    0xDE, 
+    0xAD, 
+    0xBE, 
+    0xEF, 
 };
 
 
@@ -66,13 +67,13 @@ void receiveEvent(uint8_t howMany)
     }
 
     reg_position = TinyWireS.receive();
-    if (howMany == 1)
+    howMany--;
+    if (!howMany)
     {
         // This write was only to set the buffer for next read
         return;
     }
-    byte max_reg = reg_position + howMany;
-    while(reg_position < max_reg)
+    while(howMany--)
     {
         i2c_regs[reg_position%sizeof(i2c_regs)] = TinyWireS.receive();
         reg_position++;
