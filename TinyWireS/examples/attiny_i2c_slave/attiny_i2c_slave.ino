@@ -66,13 +66,11 @@ void receiveEvent(uint8_t howMany)
         return;
     }
 
-    cli();
     reg_position = TinyWireS.receive();
     howMany--;
     if (!howMany)
     {
         // This write was only to set the buffer for next read
-        sei();
         return;
     }
     while(howMany--)
@@ -80,7 +78,6 @@ void receiveEvent(uint8_t howMany)
         i2c_regs[reg_position%sizeof(i2c_regs)] = TinyWireS.receive();
         reg_position++;
     }
-    sei();
 }
 
 
