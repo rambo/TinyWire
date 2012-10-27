@@ -62,6 +62,16 @@ Change Activity:
 #  define USI_OVERFLOW_VECTOR USI_OVERFLOW_vect
 #endif
 
+#if defined(__AVR_ATtiny84__) | defined(__AVR_ATtiny44__)
+    #define DDR_USI             DDRA
+    #define PORT_USI            PORTA
+    #define PIN_USI             PINA
+    #define PORT_USI_SDA        PORTA6
+    #define PORT_USI_SCL        PORTA4
+    #define PIN_USI_SDA         PINA6
+    #define PIN_USI_SCL         PINA4
+#endif
+
 #if defined( __AVR_ATtiny25__ ) | \
      defined( __AVR_ATtiny45__ ) | \
      defined( __AVR_ATtiny85__ )
