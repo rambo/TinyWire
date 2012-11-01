@@ -40,7 +40,8 @@ arduino pin 4 =     OC1B  = PORTB <- _BV(4) = SOIC pin 3 (Analog 2)
 #ifndef TWI_RX_BUFFER_SIZE
 #define TWI_RX_BUFFER_SIZE ( 16 )
 #endif
-// Get this library from http://bleaklow.com/files/2010/Task.tar.gz
+// Get this library from http://bleaklow.com/files/2010/Task.tar.gz 
+// and read http://bleaklow.com/2010/07/20/a_very_simple_arduino_task_manager.html for instructions
 #include <Task.h>
 #include <TaskScheduler.h>
 
@@ -90,6 +91,7 @@ void Blinker::run(uint32_t now)
 /**
  * BEGIN: I2C Stop flag checker
  */
+#define I2CStopCheck_YIELD_TICKS 4
 // Task to echo serial input.
 class I2CStopCheck : public Task
 {
@@ -97,6 +99,8 @@ public:
     I2CStopCheck();
     virtual void run(uint32_t now);
     virtual bool canRun(uint32_t now);
+private:
+    uint8_t yield_counter; // Incremented on each canRun call, used to yield to other tasks.
 };
 
 I2CStopCheck::I2CStopCheck()
@@ -107,7 +111,8 @@ I2CStopCheck::I2CStopCheck()
 // We're always ready to run this task-
 bool I2CStopCheck::canRun(uint32_t now)
 {
-    return true;
+    yield_counter++;
+    return ((yield_counter % I2CStopCheck_YIELD_TICKS) == 1);
 }
 
 void I2CStopCheck::run(uint32_t now)
@@ -122,8 +127,8 @@ void I2CStopCheck::run(uint32_t now)
 Blinker blinker(3, 100);
 I2CStopCheck checker;
 
-// The checker needs to be the last task (todo: add some sort of yielding logic)
-Task *tasks[] = { &blinker, &checker, };
+// Tasks are in priority order, only one task is run per tick
+Task *tasks[] = { &checker, &blinker, };
 TaskScheduler sched(tasks, NUM_TASKS(tasks));
 
 // The I2C registers
