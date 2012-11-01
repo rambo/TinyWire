@@ -46,48 +46,69 @@ arduino pin 4 =     OC1B  = PORTB <- _BV(4) = SOIC pin 3 (Analog 2)
 #include <Task.h>
 #include <TaskScheduler.h>
 
+// The led is connected so that the tiny sinks current
+#define LED_ON LOW
+#define LED_OFF HIGH
+
+// The I2C registers
+volatile uint8_t i2c_regs[] =
+{
+    150, // Delay between each position (ms, remeber that this isa byte so 255 is max)
+    B10101000, // SOS pattern 
+    B01110111, 
+    B01110001,
+    B01010000, 
+    B00000000,
+    B11111111, // Long on and off to mark end of pattern
+    B00000000,
+};
+// Tracks the current register pointer position
+volatile byte reg_position;
+
+
 
 /**
- * BEGIN: Blinker task copied from the Task library example
+ * BEGIN: PatternBlinker task copied from the Task library example
  */
 // Timed task to blink a LED.
-class Blinker : public TimedTask
+const byte pattern_lenght = (sizeof(i2c_regs)-1) * 8; // bits (first is the speed, rest is the pattern)
+class PatternBlinker : public TimedTask
 {
 public:
     // Create a new blinker for the specified pin and rate.
-    Blinker(uint8_t _pin, uint32_t _rate);
+    PatternBlinker(uint8_t _pin);
     virtual void run(uint32_t now);
 private:
     uint8_t pin;      // LED pin.
-    uint32_t rate;    // Blink rate.
-    bool on;          // Current state of the LED.
+    uint8_t pattern_position; // Used to calcuate the register and bit offset
 };
 
-Blinker::Blinker(uint8_t _pin, uint32_t _rate)
+PatternBlinker::PatternBlinker(uint8_t _pin)
 : TimedTask(millis()),
-  pin(_pin),
-  rate(_rate),
-  on(false)
+  pin(_pin)
 {
     pinMode(pin, OUTPUT);     // Set pin for output.
 }
 
-void Blinker::run(uint32_t now)
+void PatternBlinker::run(uint32_t now)
 {
-    // If the LED is on, turn it off and remember the state.
-    if (on) {
-        digitalWrite(pin, LOW);
-        on = false;
-    // If the LED is off, turn it on and remember the state.
+    // Start by setting the next runtime
+    incRunTime(i2c_regs[0]);
+
+    // Written out for clear code, the complier might optimize it to something more efficient even without it being unrolled into one line
+    byte reg = i2c_regs[1+(pattern_position/8)]; // Get the register where the bit pattern position is stored
+    byte shift_amount = 7 - (pattern_position % 7); // To have "natural" left-to-right pattern flow.
+    bool state = (reg >> shift_amount) & 0x1;
+    if (state) {
+        digitalWrite(pin, LED_ON);
     } else {
-        digitalWrite(pin, HIGH);
-        on = true;
+        digitalWrite(pin, LED_OFF);
     }
-    // Run again in the required number of milliseconds.
-    incRunTime(rate);
+    // Calculate the next pattern position
+    pattern_position = (pattern_position+1) % pattern_lenght;
 }
 /**
- * END: Blinker task copied from the Task library example
+ * END: PatternBlinker task copied from the Task library example
  */
 /**
  * BEGIN: I2C Stop flag checker
@@ -125,23 +146,13 @@ void I2CStopCheck::run(uint32_t now)
  */
 
 // Create the tasks.
-Blinker blinker(3, 100);
+PatternBlinker blinker(3);
 I2CStopCheck checker;
 
 // Tasks are in priority order, only one task is run per tick
 Task *tasks[] = { &checker, &blinker, };
 TaskScheduler sched(tasks, NUM_TASKS(tasks));
 
-// The I2C registers
-volatile uint8_t i2c_regs[] =
-{
-    0xDE, 
-    0xAD, 
-    0xBE, 
-    0xEF, 
-};
-// Tracks the current register pointer position
-volatile byte reg_position;
 
 /**
  * This is called for each read request we receive, never put more than one byte of data (with TinyWireS.send) to the 
@@ -192,7 +203,7 @@ void setup()
 {
     // TODO: Tri-state this and wait for input voltage to stabilize 
     pinMode(3, OUTPUT); // OC1B-, Arduino pin 3, ADC
-    digitalWrite(3, LOW); // Note that this makes the led turn on, it's wire this way to allow for the voltage sensing above.
+    digitalWrite(3, LED_ON); // Note that this makes the led turn on, it's wire this way to allow for the voltage sensing above.
 
     pinMode(1, OUTPUT); // OC1A, also The only HW-PWM -pin supported by the tiny core analogWrite
 
@@ -207,7 +218,7 @@ void setup()
     
     // Whatever other setup routines ?
     
-    digitalWrite(3, HIGH);
+    digitalWrite(3, LED_OFF);
 }
 
 void loop()
