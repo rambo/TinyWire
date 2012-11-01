@@ -20,6 +20,7 @@ extern "C" {
   }
 
 #include "TinyWireS.h"
+#include "Arduino.h"
 
 // Constructors ////////////////////////////////////////////////////////////////
 
@@ -77,6 +78,21 @@ void TinyWireS_stop_check()
         return;
     }
     usi_onReceiverPtr(amount);
+}
+
+// Implement a delay loop that checks for the stop bit (basically direct copy of the stock arduino implementation from wiring.c)
+void tws_delay(unsigned long ms)
+{
+    uint16_t start = (uint16_t)micros();
+    while (ms > 0)
+    {
+        TinyWireS_stop_check();
+        if (((uint16_t)micros() - start) >= 1000)
+        {
+            ms--;
+            start += 1000;
+        }
+    }
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////

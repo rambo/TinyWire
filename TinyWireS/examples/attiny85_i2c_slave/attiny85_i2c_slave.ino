@@ -1,6 +1,8 @@
 /**
  * Example sketch for writing to and reading from a slave in transactional manner
  *
+ * NOTE: You must not use delay() or I2C communications will fail, use tws_delay() instead (or preferably some smarter timing system)
+ *
  * On write the first byte received is considered the register addres to modify/read
  * On each byte sent or read the register address is incremented (and it will loop back to 0)
  *
@@ -57,16 +59,16 @@ void requestEvent()
     reg_position = (reg_position+1) % sizeof(i2c_regs);
 }
 
-
+// TODO: Either update this to use something smarter for timing or remove it alltogether
 void blinkn(uint8_t blinks)
 {
     digitalWrite(3, HIGH);
     while(blinks--)
     {
         digitalWrite(3, LOW);
-        delay(50);
+        tws_delay(50);
         digitalWrite(3, HIGH);
-        delay(100);
+        tws_delay(100);
     }
 }
 
@@ -129,7 +131,7 @@ void loop()
 {
     /**
      * This is the only way we can detect stop condition (http://www.avrfreaks.net/index.php?name=PNphpBB2&file=viewtopic&p=984716&sid=82e9dc7299a8243b86cf7969dd41b5b5#984716)
-     * it needs to be called in a very tight loop in order not to miss any.
+     * it needs to be called in a very tight loop in order not to miss any (REMINDER: Do *not* use delay() anywhere, use tws_delay() instead).
      * It will call the function registered via TinyWireS.onReceive(); if there is data in the buffer on stop.
      */
     TinyWireS_stop_check();

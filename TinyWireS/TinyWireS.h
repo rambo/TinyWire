@@ -55,6 +55,8 @@ class USI_TWI_S
 };
 
 void TinyWireS_stop_check();
+// Implement a delay loop that checks for the stop bit (basically direct copy of the stock arduino implementation from wiring.c)
+void tws_delay(unsigned long);
 
 extern USI_TWI_S TinyWireS;
 
