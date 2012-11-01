@@ -69,7 +69,7 @@ volatile byte reg_position;
 
 
 /**
- * BEGIN: PatternBlinker task copied from the Task library example
+ * BEGIN: PatternBlinker task based on the Task library Blinker example
  */
 // Timed task to blink a LED.
 const byte pattern_lenght = (sizeof(i2c_regs)-1) * 8; // bits (first is the speed, rest is the pattern)
