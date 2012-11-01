@@ -1,7 +1,8 @@
 /**
- * Example sketch for writing to and reading from a slave in transactional manner
+ * Example sketch for writing to and reading from a slave in transactional manner, it will also blink a led attached to pin 3 (which is the SOIC pin 2)
+ * (provided you're using one of my ATTiny85 boards from https://github.com/rambo/attiny_boards with the led soldered) 
  *
- * NOTE: You must not use delay() or I2C communications will fail, use tws_delay() instead (or preferably some smarter timing system)
+ * NOTE: You must not use delay() or I2C communications will fail, use tws_delay() instead (or preferably some smarter timing system, like the Task library used in this example)
  *
  * On write the first byte received is considered the register addres to modify/read
  * On each byte sent or read the register address is incremented (and it will loop back to 0)
@@ -41,7 +42,7 @@ arduino pin 4 =     OC1B  = PORTB <- _BV(4) = SOIC pin 3 (Analog 2)
 #define TWI_RX_BUFFER_SIZE ( 16 )
 #endif
 // Get this library from http://bleaklow.com/files/2010/Task.tar.gz 
-// and read http://bleaklow.com/2010/07/20/a_very_simple_arduino_task_manager.html for instructions
+// and read http://bleaklow.com/2010/07/20/a_very_simple_arduino_task_manager.html for background and instructions
 #include <Task.h>
 #include <TaskScheduler.h>
 
