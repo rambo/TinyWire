@@ -140,9 +140,13 @@ volatile uint8_t i2c_regs[] =
     0xBE, 
     0xEF, 
 };
-
-
+// Tracks the current register pointer position
 volatile byte reg_position;
+
+/**
+ * This is called for each read request we receive, never put more than one byte of data (with TinyWireS.send) to the 
+ * send-buffer when using this callback
+ */
 void requestEvent()
 {  
     TinyWireS.send(i2c_regs[reg_position]);
@@ -153,7 +157,8 @@ void requestEvent()
 /**
  * The I2C data received -handler
  *
- * This needs to complete before the next incoming transaction (start, data, restart/stop) does 
+ * This needs to complete before the next incoming transaction (start, data, restart/stop) on the bus does
+ * so be quick, set flags for long running tasks to be called from the mainloop instead of running them directly,
  */
 void receiveEvent(uint8_t howMany)
 {
