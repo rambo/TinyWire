@@ -10,8 +10,9 @@
  * You can try this with the Arduino I2C REPL sketch at https://github.com/rambo/I2C/blob/master/examples/i2crepl/i2crepl.ino 
  * If you have bus-pirate remember that the older revisions do not like the slave streching the clock, this leads to all sorts of weird behaviour
  *
- * To read third value (register number 2 since counting starts at 0) send "[ 8 2 [ 9 r ]", value read should be 0xBE
- * If you then send "[ 9 r r r ]" you should get 0xEF 0xDE 0xAD as response (demonstrating the register counter looping back to zero)
+ * By default this blinks the SOS morse pattern and then has long on/off time to indicate end of pattern, send [ 8 0 32 ] (using the REPL/bus-pirate 
+ * semantics) to make the delay per bit smaller (and thus blinking faster). The pattern lenght is calculated from the register size, it would be fairly
+ * trivial to make it yet another variable changeable via I2C.
  *
  * You need to have at least 8MHz clock on the ATTiny for this to work (and in fact I have so far tested it only on ATTiny85 @8MHz using internal oscillator)
  * Remember to "Burn bootloader" to make sure your chip is in correct mode 
