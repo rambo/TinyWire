@@ -113,9 +113,12 @@ void PatternBlinker::run(uint32_t now)
  */
 /**
  * BEGIN: I2C Stop flag checker
+ *
+ * This task needs to run almost all the time due to the USI I2C implementation limitations
+ *
+ * So I2CStopCheck_YIELD_TICKS below is used to specify how often the task is run, not it's every 4 ticks
  */
 #define I2CStopCheck_YIELD_TICKS 4
-// Task to echo serial input.
 class I2CStopCheck : public Task
 {
 public:
@@ -131,7 +134,7 @@ I2CStopCheck::I2CStopCheck()
 {
 }
 
-// We're always ready to run this task-
+// We can't just return true since then no other task could ever run (since we have the priority)
 bool I2CStopCheck::canRun(uint32_t now)
 {
     yield_counter++;
