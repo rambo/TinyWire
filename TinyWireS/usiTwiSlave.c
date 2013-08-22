@@ -648,7 +648,13 @@ ISR( USI_OVERFLOW_VECTOR )
       // put data into buffer
       // Not necessary, but prevents warnings
       rxHead = ( rxHead + 1 ) & TWI_RX_BUFFER_MASK;
-      rxBuf[ rxHead ] = USIDR;
+      // check buffer size
+      if (rxHead == rxTail) {
+        // overrun
+        rxHead = (rxHead + TWI_RX_BUFFER_SIZE - 1) & TWI_RX_BUFFER_MASK;
+      } else {
+        rxBuf[ rxHead ] = USIDR;
+      }
       // next USI_SLAVE_REQUEST_DATA
       overflowState = USI_SLAVE_REQUEST_DATA;
       SET_USI_TO_SEND_ACK( );
