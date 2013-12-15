@@ -12,3 +12,7 @@ as specified in the I2C protocol. However some (especially "bit-banged") master 
 support clock-streching (looking at you Bus pirate 3.x and RPI), you will not get reliable communication
 unless your master supports the full I2C protocol spec.
 
+You can use my [Arduino based I2C master][i2crepl] to test your TinyWire code, this uses Bus Pirate semantics
+with Arduinos TWI hardware that is known to implement I2C properly.
+
+[i2crepl]: https://github.com/rambo/I2C/blob/master/examples/i2crepl/i2crepl.ino
