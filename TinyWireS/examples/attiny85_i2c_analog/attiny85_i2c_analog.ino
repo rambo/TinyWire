@@ -8,6 +8,14 @@
  *
  * You can try this with the Arduino I2C REPL sketch at https://github.com/rambo/I2C/blob/master/examples/i2crepl/i2crepl.ino 
  * If you have bus-pirate remember that the older revisions do not like the slave streching the clock, this leads to all sorts of weird behaviour
+ * Examples use bus-pirate semantics (like the REPL)
+ *
+ * The basic idea is:
+ *  1. Choose your ADC channel (0-X), use "byte ch = 1;" for example.
+ *  2. Combine the channel and conversion start flag to single calue: byte start_on_ch = (ch | _BV(7)); // This is 0x81
+ *  3. Write start_on_ch to the first register on the attiny [ 8 0  81 ]
+ *  4. Come back later and check the first register [ 8 0 [ r ], if the value is same as ch then the conversion is complete, you can now read the value
+ *  5. read the value [ 8 2 [ r r ] (first one is low, second high byte)
  *
  * You need to have at least 8MHz clock on the ATTiny for this to work (and in fact I have so far tested it only on ATTiny85 @8MHz using internal oscillator)
  * Remember to "Burn bootloader" to make sure your chip is in correct mode 
