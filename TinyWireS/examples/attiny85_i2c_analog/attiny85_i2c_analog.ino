@@ -164,13 +164,14 @@ void loop()
     {
         //Avoid doubled starts
         start_conversion = false;
-        byte adcpin = (i2c_regs[0] & 0x7f);
+        byte adcpin = (i2c_regs[0] & 0x7f); // Set the channel from the control reg, dropping the highest bit.
 #if defined( CORE_ANALOG_FIRST )
         if ( adcpin >= CORE_ANALOG_FIRST ) adcpin -= CORE_ANALOG_FIRST; // allow for channel or pin numbers
 #endif
         // NOTE: These handy helpers (ADC_xxx) are only present in the tiny-core, for other cores you need to check their wiring_analog.c source.
-        ADC_SetInputChannel( (adc_ic_t)adcpin ); // Set the channel from the control reg, dropping the highest bit.
+        ADC_SetInputChannel( (adc_ic_t)adcpin ); // we need to typecast
         ADC_StartConversion();
+        // Reset these variables
         avg_count = 0;
         avg_temp2 = 0;
     }
@@ -178,6 +179,7 @@ void loop()
     if (   bitRead(i2c_regs[0], 7) // We have conversion flag up
         && !ADC_ConversionInProgress()) // But the conversion is complete
     {
+        // So handle it
         avg_temp1 = ADC_GetDataRegister();
         // Rolling average
         if (avg_count)
