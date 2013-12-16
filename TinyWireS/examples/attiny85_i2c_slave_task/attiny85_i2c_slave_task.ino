@@ -65,6 +65,8 @@ volatile uint8_t i2c_regs[] =
 };
 // Tracks the current register pointer position
 volatile byte reg_position;
+const byte reg_size = sizeof(i2c_regs);
+const byte reg_size_lessone = reg_size-1;
 
 
 
@@ -138,7 +140,13 @@ I2CStopCheck::I2CStopCheck()
 bool I2CStopCheck::canRun(uint32_t now)
 {
     yield_counter++;
-    return ((yield_counter % I2CStopCheck_YIELD_TICKS) == 1);
+    bool ret = false;
+    if (yield_counter == I2CStopCheck_YIELD_TICKS)
+    {
+        ret = true;
+        yield_counter = 0;
+    }
+    return ret;
 }
 
 void I2CStopCheck::run(uint32_t now)
@@ -166,7 +174,11 @@ void requestEvent()
 {  
     TinyWireS.send(i2c_regs[reg_position]);
     // Increment the reg position on each read, and loop back to zero
-    reg_position = (reg_position+1) % sizeof(i2c_regs);
+    reg_position++;
+    if (reg_position >= reg_size_lessone)
+    {
+        reg_position = 0;
+    }
 }
 
 /**
@@ -197,8 +209,12 @@ void receiveEvent(uint8_t howMany)
     }
     while(howMany--)
     {
-        i2c_regs[reg_position%sizeof(i2c_regs)] = TinyWireS.receive();
+        i2c_regs[reg_position] = TinyWireS.receive();
         reg_position++;
+        if (reg_position >= reg_size_lessone)
+        {
+            reg_position = 0;
+        }
     }
 }
 
