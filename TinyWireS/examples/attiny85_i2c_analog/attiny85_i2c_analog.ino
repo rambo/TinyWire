@@ -56,6 +56,8 @@ volatile uint8_t i2c_regs[] =
     0x0, // low byte 
     0x0, // high byte
 };
+const byte reg_size = sizeof(i2c_regs);
+const byte reg_size_lessone = reg_size-1;
 // Tracks the current register pointer position
 volatile byte reg_position;
 // Tracks wheter to start a conversion cycle
@@ -74,8 +76,11 @@ void requestEvent()
 {  
     TinyWireS.send(i2c_regs[reg_position]);
     // Increment the reg position on each read, and loop back to zero
-    // TODO: modulo might actually be expensive, even if it is elegant
-    reg_position = (reg_position+1) % sizeof(i2c_regs);
+    reg_position++;
+    if (reg_position >= reg_size_lessone)
+    {
+        reg_position = 0;
+    }
 }
 
 /**
@@ -106,10 +111,8 @@ void receiveEvent(uint8_t howMany)
     }
     while(howMany--)
     {
-        // TODO: modulo might actually be expensive, even if it is elegant
-        byte real_position = reg_position%sizeof(i2c_regs);
-        i2c_regs[real_position] = TinyWireS.receive();
-        if (   real_position == 0 // If it was the first register
+        i2c_regs[reg_position] = TinyWireS.receive();
+        if (   reg_position == 0 // If it was the first register
             && bitRead(i2c_regs[0], 7) // And the highest bit is set
             && !ADC_ConversionInProgress() // and we do not actually have a conversion running already
             )
@@ -117,6 +120,10 @@ void receiveEvent(uint8_t howMany)
             start_conversion = true;
         }
         reg_position++;
+        if (reg_position >= reg_size_lessone)
+        {
+            reg_position = 0;
+        }
     }
 }
 
