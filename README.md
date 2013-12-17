@@ -17,3 +17,7 @@ with Arduinos TWI hardware that is known to implement I2C properly.
 
 [i2crepl]: https://github.com/rambo/I2C/blob/master/examples/i2crepl/i2crepl.ino
 [rpibug]: http://www.advamation.com/knowhow/raspberrypi/rpi-i2c-bug.html
+
+## delayMicroseconds
+
+See this issue: <https://github.com/rambo/TinyWire/issues/8> (remember to declare the function void if you copy-paste it verbatim)
