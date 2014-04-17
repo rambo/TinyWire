@@ -12,6 +12,7 @@
 
 begin	KEYWORD2
 send	KEYWORD2
+sendBatchNow KEYWORD2
 available	KEYWORD2
 receive	KEYWORD2
 
