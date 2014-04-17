@@ -383,7 +383,7 @@ usiTwiSlaveInit(
 bool usiTwiDataInTransmitBuffer(void)
 {
 
-  // return 0 (false) if the receive buffer is empty
+  // return 0 (false) if the transmit buffer is empty
   return txHead != txTail;
 
 } // end usiTwiDataInTransmitBuffer
