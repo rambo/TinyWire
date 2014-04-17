@@ -602,15 +602,18 @@ ISR( USI_OVERFLOW_VECTOR )
       {
         // if NACK, the master does not want more data
         SET_USI_TO_TWI_START_CONDITION_MODE( );
+	txHead = txTail; //cleanup
         return;
       }
-      // from here we just drop straight into USI_SLAVE_SEND_DATA if the
+      USI_REQUEST_CALLBACK();// new position
+     // from here we just drop straight into USI_SLAVE_SEND_DATA if the
       // master sent an ACK
 
     // copy data from buffer to USIDR and set USI to shift byte
     // next USI_SLAVE_REQUEST_REPLY_FROM_SEND_DATA
     case USI_SLAVE_SEND_DATA:
-      USI_REQUEST_CALLBACK();
+      if ( txHead == txTail )
+	USI_REQUEST_CALLBACK(); // fill buffer if necessary
       // Get data from Buffer
       if ( txHead != txTail )
       {

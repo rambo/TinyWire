@@ -51,7 +51,6 @@ class USI_TWI_S
  	USI_TWI_S();
     void begin(uint8_t I2C_SLAVE_ADDR);
     void send(uint8_t data);
-    bool sendBatchNow();
     uint8_t available();
     uint8_t receive();
     void onReceive( void (*)(uint8_t) );

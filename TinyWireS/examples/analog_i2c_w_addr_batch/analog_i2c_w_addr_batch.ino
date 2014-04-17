@@ -3,9 +3,13 @@ Read an analog value on pin A3 (sensor pin)
 
 Listens on the i2c bus (slave mode) at address I2C_SLAVE_ADDR
 
-When a request is received on the i2c bus a address 1, the analog value is sent back.
-request at address 2 turns on the led at ledPin
-request at address 3 turns off the led
+When:
+request is received on the i2c bus a address 1
+  -> the analog value is sent back.
+request at address 2 
+  -> turns on the led at ledPin
+request at address 3 
+  -> turns off the led
 
 This has been tested on the i2c bus of the raspberry pi:
 i2cdump -y -r 1-1 1 3 w  # reads analog value
@@ -46,22 +50,19 @@ void requestEvent()
 {
   uint8_t val=0;
   if (reg_number==1){
-    val=sensorValue.b[nextIndex];
-    TinyWireS.send(val); // respond with message of 2 bytes, one at a time
-    nextIndex++;
-    if (nextIndex>1)
-      nextIndex=0;
+    TinyWireS.send(sensorValue.b[0]); // respond with message of 2 bytes at once
+    TinyWireS.send(sensorValue.b[1]); 
   }
 }
 
 
 void receiveEvent(uint8_t howMany)
 {
-    if (howMany > 16) // 16 is default queue length
+   if (howMany > 16) // 16 is default queue length
       return;
-    for (uint8_t i=0;i<howMany;i++)
+   for (uint8_t i=0;i<howMany;i++)
       reg_number = TinyWireS.receive();
-    if (reg_number==1)
+   if (reg_number==1) 
       nextIndex=0;
 }
 
@@ -69,7 +70,7 @@ void receiveEvent(uint8_t howMany)
 void loop() {
   // read the value from the sensor:
   sensorValue.v = analogRead(sensorPin);    
-
+  
   tws_delay(100);
   if (reg_number==2) 
     digitalWrite(ledPin,HIGH);
@@ -77,5 +78,4 @@ void loop() {
     digitalWrite(ledPin,LOW);
 
 }
-
 
