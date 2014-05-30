@@ -36,7 +36,6 @@ volatile sensor_t sensorValue={0}; // variable to store the value coming from th
 volatile byte reg_number;
 
 uint8_t value;
-int8_t nextIndex=0; //to scan the byte values in sensor_t
 
 void setup() {
   // declare the ledPin as an OUTPUT:
@@ -62,8 +61,6 @@ void receiveEvent(uint8_t howMany)
       return;
    for (uint8_t i=0;i<howMany;i++)
       reg_number = TinyWireS.receive();
-   if (reg_number==1) 
-      nextIndex=0;
 }
 
 

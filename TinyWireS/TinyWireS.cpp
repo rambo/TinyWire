@@ -34,10 +34,6 @@ void USI_TWI_S::begin(uint8_t slaveAddr){ // initialize I2C lib
   usiTwiSlaveInit(slaveAddr); 
 }
 
-bool USI_TWI_S::sendBatchNow(){  // should not send if still transmitting from buffer
-  return !usiTwiDataInTransmitBuffer();
-}
-
 void USI_TWI_S::send(uint8_t data){  // send it back to master
   usiTwiTransmitByte(data);
 }
