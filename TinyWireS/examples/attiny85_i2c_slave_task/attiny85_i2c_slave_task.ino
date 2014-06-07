@@ -66,8 +66,6 @@ volatile uint8_t i2c_regs[] =
 // Tracks the current register pointer position
 volatile byte reg_position;
 const byte reg_size = sizeof(i2c_regs);
-const byte reg_size_lessone = reg_size-1;
-
 
 
 /**
@@ -175,7 +173,7 @@ void requestEvent()
     TinyWireS.send(i2c_regs[reg_position]);
     // Increment the reg position on each read, and loop back to zero
     reg_position++;
-    if (reg_position >= reg_size_lessone)
+    if (reg_position >= reg_size)
     {
         reg_position = 0;
     }
@@ -211,7 +209,7 @@ void receiveEvent(uint8_t howMany)
     {
         i2c_regs[reg_position] = TinyWireS.receive();
         reg_position++;
-        if (reg_position >= reg_size_lessone)
+        if (reg_position >= reg_size)
         {
             reg_position = 0;
         }
