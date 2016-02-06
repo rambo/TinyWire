@@ -581,6 +581,7 @@ ISR( USI_OVERFLOW_VECTOR )
          if(_onTwiDataRequest) _onTwiDataRequest();
          if ( USIDR & 0x01 )
         {
+          USI_REQUEST_CALLBACK();
           overflowState = USI_SLAVE_SEND_DATA;
         }
         else
@@ -610,7 +611,6 @@ ISR( USI_OVERFLOW_VECTOR )
     // copy data from buffer to USIDR and set USI to shift byte
     // next USI_SLAVE_REQUEST_REPLY_FROM_SEND_DATA
     case USI_SLAVE_SEND_DATA:
-      USI_REQUEST_CALLBACK();
       // Get data from Buffer
       if ( txHead != txTail )
       {
