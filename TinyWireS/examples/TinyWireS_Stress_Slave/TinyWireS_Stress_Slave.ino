@@ -65,9 +65,23 @@ void requestEvent()
   for (i = 0; i < master_bytes; i++)
     master_data[i] += 0x5a;
 
-  master_bytes = 5;  // corrupt length, but dont' make it zero
-                     // Making it zero will obscure the 1-byte
-                     // send issue in the library that is being tested.
+  // corrupt length of the request, but dont' make it zero
+  
+  // if the usiTwiSlave.c is working fine, then this number is completely irrelevant
+  // because the requestEvent() callback will not be called again until
+  // after the next receiveEvent() callback, so the master_data and
+  // master_bytes variables will be set by that call.
+
+  // If the usiTwiSlave.c has the issue of calling the requestFrom() callback
+  // for each byte sent, the buffer will accumulate by this amount *for each byte
+  // in the original request*.
+  // 
+  // Making it zero will obscure the 1-byte send issue in the usiTwiSlave.c
+  // that is being tested.
+  // Making it small will allow a few requests to succeed before the tx buffer
+  // overflows and the usiTwiSlave.c hangs on the "while ( tmphead == txTail );"
+  // line
+  master_bytes = 2; 
 }
 
 void setup()
@@ -88,4 +102,3 @@ void loop()
   TinyWireS_stop_check();  
   // otherwise empty loop
 }
-
