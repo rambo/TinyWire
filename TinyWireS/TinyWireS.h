@@ -20,6 +20,9 @@
 
   To Send:
 	TinyWireS.send(uint8_t data){                    // sends a requested byte to master
+	// if more than a single byte to send:
+	TinyWireS.sendBatchNow()      // when true, one can send all the bytes at once using TinyWireS.send()
+	// take care not to overflow the transmit buffer of size 16 by default
 	
   TODO:	(by others!)
 	- onReceive and onRequest handlers are not implimented.
