@@ -76,6 +76,11 @@ void loop()
   // compute random number of bytes for this pass
   rand_byte_count = random(12) + 1;
 
+  // force the first three requests to be small so that the tx buffer doesn't overflow
+  // instantly and the user can see at least one successful transaction and some
+  // mismtaches before the usiTwiSlave.c library hangs on the line "while ( tmphead == txTail );".
+  if (count <= 3) rand_byte_count = 2;
+
   // generate, save, and send N random byte values
   Wire.beginTransmission(I2C_SLAVE_ADDR);
   for (i = 0; i < rand_byte_count; i++)
