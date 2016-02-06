@@ -383,7 +383,7 @@ usiTwiSlaveInit(
 bool usiTwiDataInTransmitBuffer(void)
 {
 
-  // return 0 (false) if the transmit buffer is empty
+  // return 0 (false) if the receive buffer is empty
   return txHead != txTail;
 
 } // end usiTwiDataInTransmitBuffer
@@ -602,18 +602,15 @@ ISR( USI_OVERFLOW_VECTOR )
       {
         // if NACK, the master does not want more data
         SET_USI_TO_TWI_START_CONDITION_MODE( );
-	txHead = txTail; //cleanup
         return;
       }
-      USI_REQUEST_CALLBACK();// new position
-     // from here we just drop straight into USI_SLAVE_SEND_DATA if the
+      // from here we just drop straight into USI_SLAVE_SEND_DATA if the
       // master sent an ACK
 
     // copy data from buffer to USIDR and set USI to shift byte
     // next USI_SLAVE_REQUEST_REPLY_FROM_SEND_DATA
     case USI_SLAVE_SEND_DATA:
-      if ( txHead == txTail )
-	USI_REQUEST_CALLBACK(); // fill buffer if necessary
+      USI_REQUEST_CALLBACK();
       // Get data from Buffer
       if ( txHead != txTail )
       {
