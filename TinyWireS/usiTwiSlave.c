@@ -30,6 +30,8 @@ Change Activity:
   26 Apr 2007  Fixed ACK of slave address on a read.
   04 Jul 2007  Fixed USISIF in ATtiny45 def
   12 Dev 2009  Added callback functions for data requests
+  06 Feb 2015  Minor change to allow mutli-byte requestFrom() from master.
+  10 Feb 2015  Simplied RX/TX buffer code and allowed use of full buffer.
 
 ********************************************************************************/
 
@@ -236,7 +238,7 @@ Change Activity:
 { \
     if (usi_onReceiverPtr) \
     { \
-        if (usiTwiDataInReceiveBuffer()) \
+        if (usiTwiAmountDataInReceiveBuffer()) \
         { \
             usi_onReceiverPtr(usiTwiAmountDataInReceiveBuffer()); \
         } \
@@ -289,13 +291,12 @@ static volatile overflowState_t overflowState;
 static uint8_t          rxBuf[ TWI_RX_BUFFER_SIZE ];
 static volatile uint8_t rxHead;
 static volatile uint8_t rxTail;
+static volatile uint8_t rxCount;
 
 static uint8_t          txBuf[ TWI_TX_BUFFER_SIZE ];
 static volatile uint8_t txHead;
 static volatile uint8_t txTail;
-
-// data requested callback
-void (*_onTwiDataRequest)(void);
+static volatile uint8_t txCount;
 
 
 
@@ -317,8 +318,10 @@ flushTwiBuffers(
 {
   rxTail = 0;
   rxHead = 0;
+  rxCount = 0;
   txTail = 0;
   txHead = 0;
+  txCount = 0;
 } // end flushTwiBuffers
 
 
@@ -384,7 +387,7 @@ bool usiTwiDataInTransmitBuffer(void)
 {
 
   // return 0 (false) if the receive buffer is empty
-  return txHead != txTail;
+  return txCount;
 
 } // end usiTwiDataInTransmitBuffer
 
@@ -399,17 +402,13 @@ usiTwiTransmitByte(
 
   uint8_t tmphead;
 
-  // calculate buffer index
-  tmphead = ( txHead + 1 ) & TWI_TX_BUFFER_MASK;
-
   // wait for free space in buffer
-  while ( tmphead == txTail );
+  while ( txCount == TWI_TX_BUFFER_SIZE) ;
 
   // store data in buffer
-  txBuf[ tmphead ] = data;
-
-  // store new index
-  txHead = tmphead;
+  txBuf[ txHead ] = data;
+  txHead = ( txHead + 1 ) & TWI_TX_BUFFER_MASK;
+  txCount++;
 
 } // end usiTwiTransmitByte
 
@@ -424,45 +423,26 @@ usiTwiReceiveByte(
   void
 )
 {
+  uint8_t rtn_byte;
 
   // wait for Rx data
-  while ( rxHead == rxTail );
+  while ( !rxCount );
 
+  rtn_byte = rxBuf [ rxTail ];
   // calculate buffer index
   rxTail = ( rxTail + 1 ) & TWI_RX_BUFFER_MASK;
+  rxCount--;
 
   // return data from the buffer.
-  return rxBuf[ rxTail ];
+  return rtn_byte;
 
 } // end usiTwiReceiveByte
 
 
 
-// check if there is data in the receive buffer
-
-bool
-usiTwiDataInReceiveBuffer(
-  void
-)
-{
-
-  // return 0 (false) if the receive buffer is empty
-  return rxHead != rxTail;
-
-} // end usiTwiDataInReceiveBuffer
-
 uint8_t usiTwiAmountDataInReceiveBuffer(void)
 {
-    if (rxHead == rxTail)
-    {
-        return 0;
-    }
-    if (rxHead < rxTail)
-    {
-        // Is there a better way ?
-        return ((int8_t)rxHead - (int8_t)rxTail) + TWI_RX_BUFFER_SIZE;
-    }
-    return rxHead - rxTail;
+    return rxCount;
 }
  
  
@@ -577,9 +557,7 @@ ISR( USI_OVERFLOW_VECTOR )
     case USI_SLAVE_CHECK_ADDRESS:
       if ( ( USIDR == 0 ) || ( ( USIDR >> 1 ) == slaveAddress) )
       {
-         // callback
-         if(_onTwiDataRequest) _onTwiDataRequest();
-         if ( USIDR & 0x01 )
+        if ( USIDR & 0x01 )
         {
           USI_REQUEST_CALLBACK();
           overflowState = USI_SLAVE_SEND_DATA;
@@ -612,10 +590,11 @@ ISR( USI_OVERFLOW_VECTOR )
     // next USI_SLAVE_REQUEST_REPLY_FROM_SEND_DATA
     case USI_SLAVE_SEND_DATA:
       // Get data from Buffer
-      if ( txHead != txTail )
+      if ( txCount )
       {
-        txTail = ( txTail + 1 ) & TWI_TX_BUFFER_MASK;
         USIDR = txBuf[ txTail ];
+        txTail = ( txTail + 1 ) & TWI_TX_BUFFER_MASK;
+        txCount--;
       }
       else
       {
@@ -646,14 +625,15 @@ ISR( USI_OVERFLOW_VECTOR )
     // next USI_SLAVE_REQUEST_DATA
     case USI_SLAVE_GET_DATA_AND_SEND_ACK:
       // put data into buffer
-      // Not necessary, but prevents warnings
-      rxHead = ( rxHead + 1 ) & TWI_RX_BUFFER_MASK;
       // check buffer size
-      if (rxHead == rxTail) {
-        // overrun
-        rxHead = (rxHead + TWI_RX_BUFFER_SIZE - 1) & TWI_RX_BUFFER_MASK;
-      } else {
+      if ( rxCount < TWI_RX_BUFFER_SIZE )
+      {
         rxBuf[ rxHead ] = USIDR;
+        rxHead = ( rxHead + 1 ) & TWI_RX_BUFFER_MASK;
+        rxCount++;
+      } else {
+        // overrun
+        // drop data
       }
       // next USI_SLAVE_REQUEST_DATA
       overflowState = USI_SLAVE_REQUEST_DATA;
