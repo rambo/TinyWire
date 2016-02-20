@@ -29,7 +29,22 @@
 
 #define I2C_SLAVE_ADDR  0x26            // i2c slave address (38, 0x26)
 
-#define SLAVE_RESET_PIN 2
+#if defined(ESP8266)
+  // pins that work for Monkey Board ESP8266 12-E
+  // SCL=5, SDA=4
+  #define SLAVE_RESET_PIN 2
+  #define ALL_OK_LED_PIN 16
+  #define OK_LED_PIN 14
+  #define ERROR_LED_PIN 13
+#else
+  // pins that work for Micro Pro, Uno, Mega 2560
+  // reference documentation for SCL and SDA pin locations
+  // Uno SDA=D18, SCL=D19
+  #define SLAVE_RESET_PIN 6
+  #define ALL_OK_LED_PIN 9
+  #define OK_LED_PIN 7
+  #define ERROR_LED_PIN 8
+#endif
 
 uint16_t count = 0;       // total number of passes so far
 uint16_t error_count = 0; // total errors encountered so far
@@ -39,10 +54,13 @@ char c_buf[64]; // for creating messages
 void setup()
 {
   // set pin modes 
-  pinMode(SLAVE_RESET_PIN,OUTPUT);
+  pinMode(SLAVE_RESET_PIN,OUTPUT);  // active low reset to slave device
+  pinMode(OK_LED_PIN,OUTPUT);       // indicates last transaction matched
+  pinMode(ALL_OK_LED_PIN,OUTPUT);   // indicates all transactions so far have matched
+  pinMode(ERROR_LED_PIN,OUTPUT);    // indicates last transaction mismatched
 
   // init the serial port
-  Serial.begin(115200);
+  Serial.begin(9600);
 
   // print some useful pinnout info for the Arduino
   //Serial.println(String("SCL:")+String(SCL)+String(", SDA:")+String(SDA));
@@ -50,11 +68,18 @@ void setup()
 
   // init the Wire object (for I2C)
   Wire.begin(); 
+
+  // init the i2c clock
+  // default is 100kHz if not changed
+  // Wire.setClock(400000L);  // 400kHz
   
   // reset the slave
   digitalWrite(SLAVE_RESET_PIN, LOW);
   delay(10);
   digitalWrite(SLAVE_RESET_PIN, HIGH);
+
+  // set the all okay pin high
+  digitalWrite(ALL_OK_LED_PIN, HIGH);
   
   // wait for slave to finish any init sequence
   delay(2000);
@@ -74,11 +99,11 @@ void loop()
   count++;
 
   // compute random number of bytes for this pass
-  rand_byte_count = random(12) + 1;
+  rand_byte_count = random(16) + 1;
 
   // force the first three requests to be small so that the tx buffer doesn't overflow
   // instantly and the user can see at least one successful transaction and some
-  // mismtaches before the usiTwiSlave.c library hangs on the line "while ( tmphead == txTail );".
+  // mismtaches before the usiTwiSlave.c library hangs on the line "while ( !txCount );".
   if (count <= 3) rand_byte_count = 2;
 
   // generate, save, and send N random byte values
@@ -87,8 +112,12 @@ void loop()
     Wire.write(out_rand[i] = random(256));
   Wire.endTransmission();
   
-  //delay (10);  // optional delay if required by slave (like sample ADC)
-
+  // delay 20 milliseconds to accomodate slave onReceive() callback
+  // function. The actual time that slave takes is application dependent, but
+  // just storing the master's transmitted data does not take
+  // anywhere near 20ms.
+  delay(20);
+  
   // read N bytes from slave
   req_rtn = Wire.requestFrom(I2C_SLAVE_ADDR, (int)rand_byte_count);      // Request N bytes from slave
   for (i = 0; i < req_rtn; i++)
@@ -101,9 +130,22 @@ void loop()
 
   // increment the error counter if the number of byte variables don't match or
   // if the data itself doesn't match
-  if (mismatch || (rand_byte_count != req_rtn)) error_count++;
+  if (mismatch || (rand_byte_count != req_rtn)) 
+  {
+    error_count++;
+    digitalWrite(ERROR_LED_PIN, HIGH);
+    digitalWrite(OK_LED_PIN, LOW);
+    // If there's ever an error, reset the ALL_OK_LED
+    // and it is not set again until the master resets.
+    digitalWrite(ALL_OK_LED_PIN, LOW);
+  }
+  else
+  {
+    digitalWrite(ERROR_LED_PIN, LOW);
+    digitalWrite(OK_LED_PIN, HIGH);
+  }
 
-  // The rest of the program just displays the results
+  // The rest of the program just displays the results to the serial port
   
   // display total requests so far and error count so far
   snprintf(c_buf, sizeof(c_buf), "req: %3d,err: %3d", count, error_count);

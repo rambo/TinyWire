@@ -43,6 +43,7 @@ Change Activity:
 ********************************************************************************/
 
 #include <stdbool.h>
+#include <avr/sleep.h>
 
 
 
@@ -55,8 +56,6 @@ Change Activity:
 void    usiTwiSlaveInit( uint8_t );
 void    usiTwiTransmitByte( uint8_t );
 uint8_t usiTwiReceiveByte( void );
-bool    usiTwiDataInReceiveBuffer( void );
-void    (*_onTwiDataRequest)(void);
 bool    usiTwiDataInTransmitBuffer(void);
 uint8_t usiTwiAmountDataInReceiveBuffer(void);
 // on_XXX handler pointers
