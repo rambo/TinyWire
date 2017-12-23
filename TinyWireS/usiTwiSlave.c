@@ -32,7 +32,8 @@ Change Activity:
   12 Dev 2009  Added callback functions for data requests
   06 Feb 2016  Minor change to allow mutli-byte requestFrom() from master.
   10 Feb 2016  Simplied RX/TX buffer code and allowed use of full buffer.
-  13 Feb 2016  Made USI_RECEIVE_CALLBACK() callback fully interrupt-driven.
+  13 Feb 2016  Made USI_RECEIVE_CALLBACK() callback fully interrupt-driven
+  12 Dec 2016  Added support for ATtiny167
 
 ********************************************************************************/
 
@@ -51,6 +52,19 @@ Change Activity:
 /********************************************************************************
                             device dependent defines
 ********************************************************************************/
+
+#if defined( __AVR_ATtiny167__ )
+#  define DDR_USI             DDRB
+#  define PORT_USI            PORTB
+#  define PIN_USI             PINB
+#  define PORT_USI_SDA        PB0
+#  define PORT_USI_SCL        PB2
+#  define PIN_USI_SDA         PINB0
+#  define PIN_USI_SCL         PINB2
+#  define USI_START_COND_INT  USISIF
+#  define USI_START_VECTOR    USI_START_vect
+#  define USI_OVERFLOW_VECTOR USI_OVERFLOW_vect
+#endif
 
 #if defined( __AVR_ATtiny2313__ )
 #  define DDR_USI             DDRB
@@ -108,8 +122,8 @@ Change Activity:
 #endif
 
 #if defined( __AVR_ATtiny261__ ) | \
-     defined( __AVR_ATtiny461__ ) | \
-     defined( __AVR_ATtiny861__ )
+      defined( __AVR_ATtiny461__ ) | \
+      defined( __AVR_ATtiny861__ )
 #  define DDR_USI             DDRB
 #  define PORT_USI            PORTB
 #  define PIN_USI             PINB
@@ -421,7 +435,7 @@ uint8_t usiTwiAmountDataInReceiveBuffer(void)
 {
     return rxCount;
 }
- 
+
 
 /********************************************************************************
 
