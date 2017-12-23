@@ -480,8 +480,13 @@ ISR( USI_START_VECTOR )
   // if SDA line was low at SCL edge, then start condition occurred
   if ( !( usi_pins & USI_PINS_SDA ) )
   {
-
     // a Stop Condition did not occur
+    
+    // Execute callback if this is a repeated start
+    if (in_transaction)
+    {
+        USI_RECEIVE_CALLBACK();
+    }
 
     USICR =
          // keep Start Condition Interrupt enabled to detect RESTART
