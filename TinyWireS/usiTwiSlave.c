@@ -34,6 +34,8 @@ Change Activity:
   10 Feb 2016  Simplied RX/TX buffer code and allowed use of full buffer.
   13 Feb 2016  Made USI_RECEIVE_CALLBACK() callback fully interrupt-driven
   12 Dec 2016  Added support for ATtiny167
+  23 Dec 2017  Fixed repeated restart (which broke when making receive callback
+                interrupt-driven)
 
 ********************************************************************************/
 
