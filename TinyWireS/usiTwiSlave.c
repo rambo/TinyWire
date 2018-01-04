@@ -616,9 +616,6 @@ ISR( USI_OVERFLOW_VECTOR )
       {
         if ( USIDR & 0x01 )
         {
-          // load up the tx buffer with the data to send to the master
-          USI_REQUEST_CALLBACK();
-
           overflowState = USI_SLAVE_SEND_DATA;
         }
         else
@@ -640,6 +637,9 @@ ISR( USI_OVERFLOW_VECTOR )
     // master-read / slave-send: check reply and goto USI_SLAVE_SEND_DATA if OK,
     // else reset USI
     case USI_SLAVE_CHECK_REPLY_FROM_SEND_DATA:
+      // Execute request callback for each byte requested, as this is the intended
+      // behavior of this library
+      USI_REQUEST_CALLBACK();
       if ( USIDR )
       {
         // if NACK, the master does not want more data
