@@ -9,7 +9,7 @@
 
   NOTE! - It's very important to use pullups on the SDA & SCL lines! More so than with the Wire lib.
   Current Rx & Tx buffers set at 32 bytes - see usiTwiSlave.h
- 
+
  USAGE is modeled after the standard Wire library . . .
   Put in setup():
 	TinyWireS.begin(I2C_SLAVE_ADDR);                 // initialize I2C lib & setup slave's address (7 bit - same as Wire)
@@ -20,11 +20,11 @@
 
   To Send:
 	TinyWireS.send(uint8_t data){                    // sends a requested byte to master
-	
+
   TODO:	(by others!)
 	- onReceive and onRequest handlers are not implimented.
 	- merge this class with TinyWireM for master & slave support in one library
-	
+
   This library is free software; you can redistribute it and/or modify it under the
   terms of the GNU General Public License as published by the Free Software
   Foundation; either version 2.1 of the License, or any later version.
@@ -43,7 +43,7 @@ class USI_TWI_S
 {
   private:
 	//static uint8_t USI_BytesAvail;
-	
+
   public:
  	USI_TWI_S();
     void begin(uint8_t I2C_SLAVE_ADDR);
@@ -57,8 +57,8 @@ class USI_TWI_S
 void TinyWireS_stop_check();
 // Implement a delay loop that checks for the stop bit (basically direct copy of the stock arduino implementation from wiring.c)
 void tws_delay(unsigned long);
+void tws_delay_micros(unsigned long us);
 
 extern USI_TWI_S TinyWireS;
 
 #endif
-
