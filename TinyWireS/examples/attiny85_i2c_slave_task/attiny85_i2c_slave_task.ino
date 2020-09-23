@@ -1,21 +1,21 @@
 /**
  * Example sketch for writing to and reading from a slave in transactional manner, it will also blink a led attached to pin 3 (which is the SOIC pin 2)
- * (provided you're using one of my ATTiny85 boards from https://github.com/rambo/attiny_boards with the led soldered) 
+ * (provided you're using one of my ATTiny85 boards from https://github.com/rambo/attiny_boards with the led soldered)
  *
  * NOTE: You must not use delay() or I2C communications will fail, use tws_delay() instead (or preferably some smarter timing system, like the Task library used in this example)
  *
  * On write the first byte received is considered the register addres to modify/read
  * On each byte sent or read the register address is incremented (and it will loop back to 0)
  *
- * You can try this with the Arduino I2C REPL sketch at https://github.com/rambo/I2C/blob/master/examples/i2crepl/i2crepl.ino 
+ * You can try this with the Arduino I2C REPL sketch at https://github.com/rambo/I2C/blob/master/examples/i2crepl/i2crepl.ino
  * If you have bus-pirate remember that the older revisions do not like the slave streching the clock, this leads to all sorts of weird behaviour
  *
- * By default this blinks the SOS morse pattern and then has long on/off time to indicate end of pattern, send [ 8 0 32 ] (using the REPL/bus-pirate 
+ * By default this blinks the SOS morse pattern and then has long on/off time to indicate end of pattern, send [ 8 0 32 ] (using the REPL/bus-pirate
  * semantics) to make the delay per bit smaller (and thus blinking faster). The pattern lenght is calculated from the register size, it would be fairly
  * trivial to make it yet another variable changeable via I2C.
  *
  * You need to have at least 8MHz clock on the ATTiny for this to work (and in fact I have so far tested it only on ATTiny85 @8MHz using internal oscillator)
- * Remember to "Burn bootloader" to make sure your chip is in correct mode 
+ * Remember to "Burn bootloader" to make sure your chip is in correct mode
  */
 
 
@@ -42,7 +42,7 @@ arduino pin 4 =     OC1B  = PORTB <- _BV(4) = SOIC pin 3 (Analog 2)
 #ifndef TWI_RX_BUFFER_SIZE
 #define TWI_RX_BUFFER_SIZE ( 16 )
 #endif
-// Get this library from http://bleaklow.com/files/2010/Task.tar.gz 
+// Get this library from http://bleaklow.com/files/2010/Task.tar.gz
 // and read http://bleaklow.com/2010/07/20/a_very_simple_arduino_task_manager.html for background and instructions
 #include <Task.h>
 #include <TaskScheduler.h>
@@ -55,10 +55,10 @@ arduino pin 4 =     OC1B  = PORTB <- _BV(4) = SOIC pin 3 (Analog 2)
 volatile uint8_t i2c_regs[] =
 {
     150, // Delay between each position (ms, remeber that this isa byte so 255 is max)
-    B10101000, // SOS pattern 
-    B01110111, 
+    B10101000, // SOS pattern
+    B01110111,
     B01110001,
-    B01010000, 
+    B01010000,
     B00000000,
     B11111111, // Long on and off to mark end of pattern
     B00000000,
@@ -149,7 +149,7 @@ bool I2CStopCheck::canRun(uint32_t now)
 
 void I2CStopCheck::run(uint32_t now)
 {
-    TinyWireS_stop_check();
+    TinyWireS.stateCheck();
 }
 /**
  * END: I2C Stop flag checker
@@ -165,11 +165,11 @@ TaskScheduler sched(tasks, NUM_TASKS(tasks));
 
 
 /**
- * This is called for each read request we receive, never put more than one byte of data (with TinyWireS.send) to the 
+ * This is called for each read request we receive, never put more than one byte of data (with TinyWireS.send) to the
  * send-buffer when using this callback
  */
 void requestEvent()
-{  
+{
     TinyWireS.send(i2c_regs[reg_position]);
     // Increment the reg position on each read, and loop back to zero
     reg_position++;
@@ -219,7 +219,7 @@ void receiveEvent(uint8_t howMany)
 
 void setup()
 {
-    // TODO: Tri-state this and wait for input voltage to stabilize 
+    // TODO: Tri-state this and wait for input voltage to stabilize
     pinMode(3, OUTPUT); // OC1B-, Arduino pin 3, ADC
     digitalWrite(3, LED_ON); // Note that this makes the led turn on, it's wire this way to allow for the voltage sensing above.
 
@@ -233,9 +233,9 @@ void setup()
     TinyWireS.onReceive(receiveEvent);
     TinyWireS.onRequest(requestEvent);
 
-    
+
     // Whatever other setup routines ?
-    
+
     digitalWrite(3, LED_OFF);
 }
 

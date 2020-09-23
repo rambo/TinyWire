@@ -14,6 +14,9 @@ begin	KEYWORD2
 send	KEYWORD2
 available	KEYWORD2
 receive	KEYWORD2
+busActive	KEYWORD2
+stateCheck KEYWORD2
+sleepMode KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)

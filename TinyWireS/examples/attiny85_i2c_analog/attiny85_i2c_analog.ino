@@ -6,7 +6,7 @@
  * On write the first byte received is considered the register addres to modify/read
  * On each byte sent or read the register address is incremented (and it will loop back to 0)
  *
- * You can try this with the Arduino I2C REPL sketch at https://github.com/rambo/I2C/blob/master/examples/i2crepl/i2crepl.ino 
+ * You can try this with the Arduino I2C REPL sketch at https://github.com/rambo/I2C/blob/master/examples/i2crepl/i2crepl.ino
  * If you have bus-pirate remember that the older revisions do not like the slave streching the clock, this leads to all sorts of weird behaviour
  * Examples use bus-pirate semantics (like the REPL)
  *
@@ -18,7 +18,7 @@
  *  5. read the value [ 8 2 [ r r ] (first one is low, second high byte)
  *
  * You need to have at least 8MHz clock on the ATTiny for this to work (and in fact I have so far tested it only on ATTiny85 @8MHz using internal oscillator)
- * Remember to "Burn bootloader" to make sure your chip is in correct mode 
+ * Remember to "Burn bootloader" to make sure your chip is in correct mode
  */
 
 
@@ -53,7 +53,7 @@ volatile uint8_t i2c_regs[] =
 {
     0x0, // Status register, writing (1<<7 & channel) will start a conversion on that channel, the flag will be set low when conversion is done.
     0x1, // Averaging count, make this many conversions in row and average the result (well, actually it's a rolling average since we do not want to have the possibility of integer overflows)
-    0x0, // low byte 
+    0x0, // low byte
     0x0, // high byte
 };
 const byte reg_size = sizeof(i2c_regs);
@@ -68,11 +68,11 @@ int avg_temp1;
 int avg_temp2;
 
 /**
- * This is called for each read request we receive, never put more than one byte of data (with TinyWireS.send) to the 
+ * This is called for each read request we receive, never put more than one byte of data (with TinyWireS.send) to the
  * send-buffer when using this callback
  */
 void requestEvent()
-{  
+{
     TinyWireS.send(i2c_regs[reg_position]);
     // Increment the reg position on each read, and loop back to zero
     reg_position++;
@@ -129,7 +129,7 @@ void receiveEvent(uint8_t howMany)
 
 void setup()
 {
-    // TODO: Tri-state this and wait for input voltage to stabilize 
+    // TODO: Tri-state this and wait for input voltage to stabilize
     pinMode(3, OUTPUT); // OC1B-, Arduino pin 3, ADC
     digitalWrite(3, LOW); // Note that this makes the led turn on, it's wire this way to allow for the voltage sensing above.
 
@@ -143,9 +143,9 @@ void setup()
     TinyWireS.onReceive(receiveEvent);
     TinyWireS.onRequest(requestEvent);
 
-    
+
     // Whatever other setup routines ?
-    
+
     digitalWrite(3, HIGH);
 }
 
@@ -156,7 +156,7 @@ void loop()
      * it needs to be called in a very tight loop in order not to miss any (REMINDER: Do *not* use delay() anywhere, use tws_delay() instead).
      * It will call the function registered via TinyWireS.onReceive(); if there is data in the buffer on stop.
      */
-    TinyWireS_stop_check();
+    TinyWireS.stateCheck();
 
     // Thus stuff is basically copied from wiring_analog.c
     if (start_conversion)
@@ -174,7 +174,7 @@ void loop()
         avg_count = 0;
         avg_temp2 = 0;
     }
-    
+
     if (   bitRead(i2c_regs[0], 7) // We have conversion flag up
         && !ADC_ConversionInProgress()) // But the conversion is complete
     {

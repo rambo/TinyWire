@@ -46,15 +46,18 @@ class USI_TWI_S
 
   public:
  	USI_TWI_S();
-    void begin(uint8_t I2C_SLAVE_ADDR);
+    void begin(uint8_t I2C_SLAVE_ADDR, uint16_t tout = 0);
     void send(uint8_t data);
     uint8_t available();
     uint8_t receive();
+    bool busActive();
+    void stateCheck( void );
+    bool sleepMode(bool sleepFlag);
     void onReceive( void (*)(uint8_t) );
     void onRequest( void (*)(void) );
 };
 
-void TinyWireS_stop_check();
+//void TinyWireS_stop_check();
 // Implement a delay loop that checks for the stop bit (basically direct copy of the stock arduino implementation from wiring.c)
 void tws_delay(unsigned long);
 void tws_delay_micros(unsigned long us);

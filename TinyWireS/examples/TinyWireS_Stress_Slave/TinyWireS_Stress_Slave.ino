@@ -18,14 +18,14 @@
 //
 //
 // SETUP:
-// AtTiny Pin 5 (PB0/SDA) = I2C SDA 
+// AtTiny Pin 5 (PB0/SDA) = I2C SDA
 //     connect to SDA on master with external pull-up (~4.7K)
-// AtTiny Pin 7 (PB0/SCL) = I2C SCL 
+// AtTiny Pin 7 (PB0/SCL) = I2C SCL
 //     connect to SCL on master with external pull-up (~4.7K)
 // AtTiny Pin 1 (PB5/!RST)
 //     connect to reset on master (or just pull-up)
 //
-// Please see credits and usage for usiTwiSlave and TinyWireS in the .h files of 
+// Please see credits and usage for usiTwiSlave and TinyWireS in the .h files of
 // those libraries.
 
 #include "TinyWireS.h"                  // wrapper class for I2C slave routines
@@ -41,7 +41,7 @@ uint8_t master_bytes;
 void receiveEvent(uint8_t num_bytes)
 {
   uint8_t i;
-  
+
   // save the number of bytes sent from the master
   master_bytes = num_bytes;
 
@@ -55,7 +55,7 @@ void receiveEvent(uint8_t num_bytes)
 void requestEvent()
 {
   uint8_t i;
-  
+
   // send the data buffer back to the master
   for (i = 0; i < master_bytes; i++)
     TinyWireS.send(master_data[i]);
@@ -66,7 +66,7 @@ void requestEvent()
     master_data[i] += 0x5a;
 
   // corrupt length of the request, but dont' make it zero
-  
+
   // if the usiTwiSlave.c is working fine, then this number is completely irrelevant
   // because the requestEvent() callback will not be called again until
   // after the next receiveEvent() callback, so the master_data and
@@ -75,13 +75,13 @@ void requestEvent()
   // If the usiTwiSlave.c has the issue of calling the requestFrom() callback
   // for each byte sent, the buffer will accumulate by this amount *for each byte
   // in the original request*.
-  // 
+  //
   // Making it zero will obscure the 1-byte send issue in the usiTwiSlave.c
   // that is being tested.
   // Making it small will allow a few requests to succeed before the tx buffer
   // overflows and the usiTwiSlave.c hangs on the "while ( tmphead == txTail );"
   // line
-  master_bytes = 2; 
+  master_bytes = 2;
 }
 
 void setup()
@@ -91,7 +91,7 @@ void setup()
 
   // register the onReceive() callback function
   TinyWireS.onReceive(receiveEvent);
-  
+
   // register the onRequest() callback function
   TinyWireS.onRequest(requestEvent);
 }
@@ -99,6 +99,6 @@ void setup()
 void loop()
 {
   // This needs to be here
-  TinyWireS_stop_check();  
+  TinyWireS.stateCheck();  
   // otherwise empty loop
 }

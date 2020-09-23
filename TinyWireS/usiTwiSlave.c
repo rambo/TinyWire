@@ -210,6 +210,8 @@ Change Activity:
 { \
   /* set SDA as input */ \
   DDR_USI &= ~( 1 << PORT_USI_SDA ); \
+  /* clear bus active flag */ \
+  busActive = false; \
   \
   USICR = \
        /* enable Start Condition Interrupt, disable Overflow Interrupt */ \
@@ -294,7 +296,6 @@ Change Activity:
 
 #define USI_REQUEST_CALLBACK() \
 { \
-    USI_RECEIVE_CALLBACK(); \
     if (usi_onRequestPtr) \
     { \
         busy = true; \
@@ -329,13 +330,20 @@ typedef enum
 
 static uint8_t                  slaveAddress;
 
-// define a timeout to wait for a properly latched start condition
-// 100 or so clock cycles should be more than enough!
-static int8_t waitCnt, waitCnt_limit = 100;
+// Define a timeout to wait for a properly latched start condition
+// 250 or so clock cycles should be more than enough!
+static volatile uint8_t waitCnt, waitCnt_limit = 250;
 
-// flag to ensure we finish processing the last request and aren't rudely
+// Flag to ensure we finish processing the last request and aren't rudely
 // interrupted by the next one (i.e. fast master, slow slave scenario)
-static bool busy;
+// This should also be set prior to sleeping, and cleared once awake, as this
+// prevents entering an overflow state just before the MCU sleeps.
+static volatile bool busy;
+
+// Flag to check for bus activty.
+// Can be useful to check prior to sleeping. Should help to prevent going to
+// sleep while waiting for a 'send ACK' or 'send data' to be clocked out.
+static volatile bool busActive;
 
 static volatile overflowState_t overflowState;
 
@@ -408,11 +416,8 @@ usiTwiSlaveInit(
   // Set SCL and SDA as output
   DDR_USI |= ( 1 << PORT_USI_SCL ) | ( 1 << PORT_USI_SDA );
 
-  // set SCL high
-  PORT_USI |= ( 1 << PORT_USI_SCL );
-
-  // set SDA high
-  PORT_USI |= ( 1 << PORT_USI_SDA );
+  // set SCL and SDA high
+  PORT_USI |= ( 1 << PORT_USI_SCL ) | ( 1 << PORT_USI_SDA );
 
   // setup for start condition detection
   SET_USI_TO_TWI_START_CONDITION_MODE();
@@ -435,7 +440,7 @@ usiTwiTransmitByte(
 )
 {
   // wait for free space in buffer
-  while ( txCount == TWI_TX_BUFFER_SIZE) ;
+  while (txCount == TWI_TX_BUFFER_SIZE);
 
   // store data in buffer
   txBuf[ txHead ] = data;
@@ -470,12 +475,33 @@ usiTwiReceiveByte(
 
 uint8_t usiTwiAmountDataInReceiveBuffer(void)
 {
-    return rxCount;
+  return rxCount;
 }
 
 void usiTwiHandleSTOP(void)
 {
-    ONSTOP_USI_RECEIVE_CALLBACK();
+  ONSTOP_USI_RECEIVE_CALLBACK();
+}
+
+bool usiTwiIsBusActive(void)
+{
+  return busActive;
+}
+
+void usiTwiSetSleep(bool bFlag)
+{
+  if (bFlag) {
+    // set busy flag while sleeping
+    busy = true;
+
+    // release both SCL and SDA
+    DDR_USI &= ~( (1 << PIN_USI_SCL) | (1 << PIN_USI_SDA) ); // set as inputs
+    PORT_USI |= (1 << PIN_USI_SCL) | (1 << PIN_USI_SDA);     // enable pullups
+
+  } else {
+    // when we wake we need to reset the interface
+    usiTwiSlaveInit(slaveAddress);
+  }
 }
 
 /********************************************************************************
@@ -486,43 +512,44 @@ void usiTwiHandleSTOP(void)
 
 ISR( USI_START_VECTOR )
 {
+  busActive = true;
+
   // if not busy proceed
   if (!busy) {
 
-      // set default starting conditions for new TWI package
-      overflowState = USI_SLAVE_CHECK_ADDRESS;
+    // set default starting conditions for new TWI package
+    overflowState = USI_SLAVE_CHECK_ADDRESS;
 
-      // wait for SCL to go low to ensure the Start Condition has completed (the
-      // start detector will hold SCL low ) - if a Stop Condition arises then leave
-      // the interrupt to prevent waiting forever - don't use USISR to test for Stop
-      // Condition as in Application Note AVR312 because the Stop Condition Flag is
-      // going to be set from the last TWI sequence
+    // wait for SCL to go low to ensure the Start Condition has completed (the
+    // start detector will hold SCL low ) - if a Stop Condition arises then leave
+    // the interrupt to prevent waiting forever - don't use USISR to test for Stop
+    // Condition as in Application Note AVR312 because the Stop Condition Flag is
+    // going to be set from the last TWI sequence
 
-      waitCnt = 0; // reset timeout counter
-      while (
-           // SCL is high
-           ( PIN_USI & ( 1 << PIN_USI_SCL ) ) &&
-           // and SDA is low
-           !( PIN_USI & ( 1 << PIN_USI_SDA ) ) &&
-           // and we haven't timed out
-           (waitCnt < waitCnt_limit)
-      ) waitCnt++;
+    waitCnt = 0; // reset timeout counter
+    while (
+      // SCL is high
+      ( PIN_USI & ( 1 << PIN_USI_SCL ) ) &&
+      // and SDA is low
+      !( PIN_USI & ( 1 << PIN_USI_SDA ) ) &&
+      // and we haven't timed out
+      (waitCnt < waitCnt_limit)
+    ) waitCnt++;
 
-      if ( !( PIN_USI & ( 1 << PIN_USI_SDA ) ) && (waitCnt < waitCnt_limit) )
-      { // valid start, so prepare to send/receive data
-        SET_USI_TO_TWI_OVERFLOW_MODE();
-      }
-      else
-      { // bad start or timeout occurred so reset
-        SET_USI_TO_TWI_START_CONDITION_MODE();
-      } // end if
-
-    } else {
-        // pass through if busy
-        // but make sure to reset start condition to release SCL
-        USISR |= ( 1 << USI_START_COND_INT );
+    if ( !( PIN_USI & ( 1 << PIN_USI_SCL ) ) && (waitCnt < waitCnt_limit) )
+    { // valid start so prepare to send/receive data
+      SET_USI_TO_TWI_OVERFLOW_MODE();
     }
+    else
+    { // bad start or timeout occurred so reset
+      SET_USI_TO_TWI_START_CONDITION_MODE();
+    } // end if
 
+  } else {
+    // pass through if busy
+    // but make sure to reset start condition to release SCL
+    USISR |= ( 1 << USI_START_COND_INT );
+  }
 
 } // end ISR( USI_START_VECTOR )
 
@@ -547,26 +574,28 @@ ISR( USI_OVERFLOW_VECTOR )
     // Address mode: check address and send ACK (and next USI_SLAVE_SEND_DATA) if OK,
     // else reset USI
     case USI_SLAVE_CHECK_ADDRESS:
-      if ( ( USIDR == 0 ) || ( ( USIDR >> 1 ) == slaveAddress) )
-      {
-        // valid address (slave or broadcast), so determine mode
+      // handle valid address (broadcast (0) or slave)
+      if ( ( USIDR == 0 ) || ( ( USIDR >> 1 ) == slaveAddress ) ) {
+
+        // First check we don't have data sitting in receive buffer to process.
+        // This situation can arise from a no 'stop' between 'starts' type
+        // scenario (start->write->start->read/write), or a missed 'stop'.
+        USI_RECEIVE_CALLBACK();
+
+        // determine mode
         if ( USIDR & 0x01 )
-        {
-          // master read mode
+        { // --- master read mode ---
           USI_REQUEST_CALLBACK();   // put initial data in tx buffer
           overflowState = USI_SLAVE_SEND_DATA;
-        }
-        else
-        {
-          // master write mode
+        } else
+        { // --- master write mode ---
           overflowState = USI_SLAVE_REQUEST_DATA;
-        } // end if
+        }
         SET_USI_TO_SEND_ACK( );
-      }
-      else
-      {
-        // no address match so reset
-        SET_USI_TO_TWI_START_CONDITION_MODE( );
+
+      } else {
+          // no address match so reset
+          SET_USI_TO_TWI_START_CONDITION_MODE( );
       }
       break;
 
@@ -578,10 +607,10 @@ ISR( USI_OVERFLOW_VECTOR )
         // if NACK or stop, the master does not want more data, so reset
         SET_USI_TO_TWI_START_CONDITION_MODE( );
         return;
-    } else {
+      } else {
         // ACK received, so put some more data in the tx buffer
         USI_REQUEST_CALLBACK();
-    }
+      }
 
       // from here we just drop straight into USI_SLAVE_SEND_DATA if the
       // master sent an ACK
