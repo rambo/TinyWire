@@ -59,28 +59,18 @@ void USI_TWI_S::onRequest( void (*function)(void) )
   usi_onRequestPtr = function;
 }
 
+// This routine is no longer used now that the usiTwiSlave is completely
+// interrupt driven. The function is maintained here so that programs
+// written for the pre-interrupt driven version will still compile and function.
 void TinyWireS_stop_check()
 {
-    if (!usi_onReceiverPtr)
-    {
-        // no onReceive callback, nothing to do...
-        return;
-    }
-    if (!(USISR & ( 1 << USIPF )))
-    {
-        // Stop not detected
-        return;
-    }
-    uint8_t amount = usiTwiAmountDataInReceiveBuffer();
-    if (amount == 0)
-    {
-        // no data in buffer
-        return;
-    }
-    usi_onReceiverPtr(amount);
+  // empty functions
 }
 
 // Implement a delay loop that checks for the stop bit (basically direct copy of the stock arduino implementation from wiring.c)
+// I don't think this function is necessary now that the 
+// usiTwiSlave is completely interrupt driven. I'm not sure, and the function is 
+// behaviorally harmless because TinyWireS_stop_check() is empty, so I'm leaving it alone.
 void tws_delay(unsigned long ms)
 {
     uint16_t start = (uint16_t)micros();
